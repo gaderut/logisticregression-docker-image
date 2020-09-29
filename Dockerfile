@@ -2,14 +2,16 @@
 FROM python:3.7
 
 # set the working directory in the container
-WORKDIR /usr/src/app
+RUN mkdir /lgr
+WORKDIR /lgr
 
 # install dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt /lgr
+RUN pip install -r requirements.txt
 
 # copy the content of the local src directory to the working directory
-COPY src/ .
+COPY . /lgr
 
 # command to run on container start
-CMD [ "python", "./main.py" ]
+CMD [ "python", "main.py" ]
+
