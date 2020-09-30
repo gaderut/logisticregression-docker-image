@@ -45,9 +45,13 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
-        times_encoder = OneHotEncoder()
-        transformed_time = times_encoder.transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
+        times_encoder = OneHotEncoder(cols=["checkin_datetime"])
+        # times_encoder = times_encoder.fit_transform()
+        transformed_time = times_encoder.fit_transform(df)
+        # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
         times_df = pd.DataFrame(transformed_time, columns=times_encoder.get_feature_names())
+        print ("timesss ",times_df)
+        print ("typessss ",type(times_df))
 
         dayOfWeek_encoder = OneHotEncoder()
         transformed_dayOfWeek = dayOfWeek_encoder.transform(df['day_of_week'].to_numpy().reshape(-1, 1))
