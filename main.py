@@ -37,7 +37,7 @@ def readTrainingData():
     df = rows._current_rows
     print("columns ", df.columns)
     data = getData(df)
-    x = data.drop(['duration'], axis=1).to_numpy()
+    x = data.drop(['duration','uu_id'], axis=1).to_numpy()
     y = data['duration'].to_numpy()
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
@@ -46,32 +46,32 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
-        times_encoder = ce.OneHotEncoder(cols=["checkin_datetime"])
+        times_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
         # times_encoder = times_encoder.fit_transform()
-        transformed_time = times_encoder.fit_transform(df)
+        transformed_df = times_encoder.fit_transform(df)
         # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
-        times_df = pd.DataFrame(transformed_time, columns=times_encoder.get_feature_names())
-        print ("timesss ",times_df)
-        print ("typessss ",type(times_df))
+        df = pd.DataFrame(transformed_df, columns=times_encoder.get_feature_names())
+        print ("timesss ",df)
+        print ("typessss ",type(df))
 
-        dayOfWeek_encoder = OneHotEncoder()
-        transformed_dayOfWeek = dayOfWeek_encoder.transform(df['day_of_week'].to_numpy().reshape(-1, 1))
-        dayOfWeek_df = pd.DataFrame(transformed_dayOfWeek, columns=dayOfWeek_encoder.get_feature_names())
-
-        dept_encoder = OneHotEncoder()
-        transformed_dept = dept_encoder.transform(df['dept_type'].to_numpy().reshape(-1, 1))
-        dept_df = pd.DataFrame(transformed_dept, columns=dept_encoder.get_feature_names())
-
-        gender_encoder = OneHotEncoder()
-        transformed_gender = gender_encoder.transform(df['gender'].to_numpy().reshape(-1, 1))
-        gender_df = pd.DataFrame(transformed_gender, columns=gender_encoder.get_feature_names())
-
-        race_encoder = OneHotEncoder()
-        transformed_race = race_encoder.transform(df['race'].to_numpy().reshape(-1, 1))
-        race_df = pd.DataFrame(transformed_race, columns=race_encoder.get_feature_names())
-
-        df = pd.concat([times_df, dayOfWeek_df, dept_df, gender_df, race_df, df], axis=1).drop(
-            ['day_of_week', 'checkin_datetime', 'dept_type', 'gender', 'race'], axis=1)
+        # dayOfWeek_encoder = OneHotEncoder()
+        # transformed_dayOfWeek = dayOfWeek_encoder.transform(df['day_of_week'].to_numpy().reshape(-1, 1))
+        # dayOfWeek_df = pd.DataFrame(transformed_dayOfWeek, columns=dayOfWeek_encoder.get_feature_names())
+        #
+        # dept_encoder = OneHotEncoder()
+        # transformed_dept = dept_encoder.transform(df['dept_type'].to_numpy().reshape(-1, 1))
+        # dept_df = pd.DataFrame(transformed_dept, columns=dept_encoder.get_feature_names())
+        #
+        # gender_encoder = OneHotEncoder()
+        # transformed_gender = gender_encoder.transform(df['gender'].to_numpy().reshape(-1, 1))
+        # gender_df = pd.DataFrame(transformed_gender, columns=gender_encoder.get_feature_names())
+        #
+        # race_encoder = OneHotEncoder()
+        # transformed_race = race_encoder.transform(df['race'].to_numpy().reshape(-1, 1))
+        # race_df = pd.DataFrame(transformed_race, columns=race_encoder.get_feature_names())
+        #
+        # df = pd.concat([times_df, dayOfWeek_df, dept_df, gender_df, race_df, df], axis=1).drop(
+        #     ['day_of_week', 'checkin_datetime', 'dept_type', 'gender', 'race'], axis=1)
     return df
 
 
