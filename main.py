@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
 from timeParser import timeParser
+import category_encoders as ce
 
 app = Flask(__name__)
 CORS(app)
@@ -45,7 +46,7 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
-        times_encoder = OneHotEncoder(cols=["checkin_datetime"])
+        times_encoder = ce.OneHotEncoder(cols=["checkin_datetime"])
         # times_encoder = times_encoder.fit_transform()
         transformed_time = times_encoder.fit_transform(df)
         # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
