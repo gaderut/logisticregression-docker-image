@@ -72,8 +72,7 @@ def predict():
                           columns=[d['label'] for d in clientRequest['cols']])
         predict_data = getData(df)
         y_pred = np.array2string(model.predict(predict_data))
-        # y_pred = model.predict(test_data)
-        return jsonify(y_pred)
+        return str("The employee may leave at "+y_pred)
 
 
 if __name__ == '__main__':
