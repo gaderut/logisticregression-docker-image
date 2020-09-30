@@ -36,7 +36,7 @@ def readTrainingData():
     rows = session.execute('SELECT * FROM employee')
     df = rows._current_rows
     print("columns ", df.columns)
-    data = getData(df)
+    data = getData(df,False)
     x = data.drop(['duration','uu_id'], axis=1).to_numpy()
     y = data['duration'].to_numpy()
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
@@ -44,16 +44,18 @@ def readTrainingData():
     return x_train, y_train
 
 
-def getData(df, onehot=True):
+def getData(df,flag, onehot=True):
     if onehot:
         data_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
         # times_encoder = times_encoder.fit_transform()
-        transformed_df = data_encoder.fit_transform(df)
+        if flag == True:
+            transformed_df = data_encoder.transform(df)
+        else:
+            transformed_df = data_encoder.fit_transform(df)
         # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
         df = pd.DataFrame(transformed_df, columns=data_encoder.get_feature_names())
-        print ("timesss ",df)
-        print ("typessss ",type(df))
-
+        print ("timesss ", df)
+        print ("typessss ", type(df))
     return df
 
 
@@ -74,7 +76,8 @@ def predict():
         #                   columns=[d['label'] for d in clientRequest['cols']])
         print("request ",clientRequest)
         df = pd.DataFrame.from_dict(clientRequest)
-        predict_data = getData(df)
+        print("request columns ",df.columns)
+        predict_data = getData(df,True)
         print("start prediction*******************************************")
         y_pred = np.array2string(model.predict(predict_data))
         print("sending the response back **************************")
