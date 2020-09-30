@@ -24,10 +24,17 @@ def readTrainingData():
     session.execute('USE ccproj_db')
     # condition to check which workflow
     rows = session.execute('SELECT * FROM employee')
+    x = []
+    y = []
     for row in rows:
         print(row.uu_id, row.emp_id, row.dept_type)
-    x = rows.iloc[:, 2:6]
-    y = rows.iloc[:, 7:]  # splitting?
+        x.append([row.emp_id,row.dept_type,row.race,row.day_of_week])
+        y.append(row.checkin_datetime)
+    # x = rows.iloc[:, 2:6]
+    # x = rows.current_rows()[:, 2:6]
+    # y = rows.iloc[:, 7]  # splitting?
+    print (x)
+    print ("printing y", y)
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
     return x_train, y_train
@@ -43,7 +50,7 @@ def trainModel(x_train, y_train):
     return model
 
 
-@app.route("/app/getPrediction", methods=['POST'])
+@app.route("/app/getPredictionLR", methods=['POST'])
 def predict():
     if request.method == 'POST':
         clientRequest = request.get_json()
