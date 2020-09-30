@@ -59,8 +59,10 @@ def getData(df, onehot=True):
 
 # Model Training
 def trainModel(x_train, y_train):
+    print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
+    print("model training complete*********************")
     return model
 
 
@@ -71,14 +73,17 @@ def predict():
         df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
                           columns=[d['label'] for d in clientRequest['cols']])
         predict_data = getData(df)
+        print("start prediction*******************************************")
         y_pred = np.array2string(model.predict(predict_data))
-        return str("The employee may leave at "+y_pred)
+        print("sending the response back **************************")
+        return str(y_pred)
 
 
 if __name__ == '__main__':
     # get the training data from Cassandra
+    print("data read ***********")
     x_data, y_data = readTrainingData()
     # train the model
+    print("in main model training to be started****************")
     modelTrained = trainModel(x_data, y_data)
-    # read the prediction data
     app.run(debug=True, host="0.0.0.0", port=50)
