@@ -82,4 +82,4 @@ if __name__ == '__main__':
     # train the model
     modelTrained = trainModel(x_data, y_data)
     # read the prediction data
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=50)
