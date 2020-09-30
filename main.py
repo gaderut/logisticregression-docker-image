@@ -46,11 +46,11 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
-        times_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
+        data_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
         # times_encoder = times_encoder.fit_transform()
-        transformed_df = times_encoder.fit_transform(df)
+        transformed_df = data_encoder.fit_transform(df)
         # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
-        df = pd.DataFrame(transformed_df, columns=times_encoder.get_feature_names())
+        df = pd.DataFrame(transformed_df, columns=data_encoder.get_feature_names())
         print ("timesss ",df)
         print ("typessss ",type(df))
 
@@ -70,7 +70,8 @@ def predict():
         clientRequest = request.get_json()
         df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
                           columns=[d['label'] for d in clientRequest['cols']])
-        y_pred = np.array2string(model.predict(df))
+        predict_data = getData(df)
+        y_pred = np.array2string(model.predict(predict_data))
         # y_pred = model.predict(test_data)
         return jsonify(y_pred)
 
