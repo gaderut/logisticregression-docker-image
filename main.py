@@ -23,6 +23,7 @@ model = None
 def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
 
+
 # get training data from Cassandra
 def readTrainingData():
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
@@ -33,38 +34,41 @@ def readTrainingData():
     # condition to check which workflow
     rows = session.execute('SELECT * FROM employee')
     df = rows._current_rows
-    print ("columns ",df.columns)
-    # data = getData(df)
-    x = []
-    y = []
-    for row in rows:
-        print(row.uu_id, row.emp_id, row.dept_type)
-        x.append([row.emp_id, row.dept_type, row.race, row.day_of_week])
-        y.append(row.checkin_datetime)
-    # print ("printing x ", x)
-    # print ("printing y", y)
+    print("columns ", df.columns)
+    data = getData(df)
+    x = data.drop(['duration'], axis=1).to_numpy()
+    y = data['duration'].to_numpy()
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
     return x_train, y_train
 
-def getData(x_train, onehot=True):
 
-        if onehot:
-            times_encoder = OneHotEncoder()
-            transformed_time = times_encoder.transform(
-                x_train[4].to_numpy().reshape(-1, 1))
-            times_df = pd.DataFrame(
-                transformed_time, columns=times_encoder.get_feature_names())
-            dayOfWeek_encoder = OneHotEncoder()
-            transformed_dayOfWeek = dayOfWeek_encoder.transform(
-                x_train[3].to_numpy().reshape(-1, 1))
-            dayOfWeek_df = pd.DataFrame(
-                transformed_dayOfWeek, columns=dayOfWeek_encoder.get_feature_names())
-            x_train = pd.concat([times_df, dayOfWeek_df, x_train], axis=1).drop(
-                [3, 4], axis=1)
-            dept_encoder = OneHotEncoder()
+def getData(df, onehot=True):
+    if onehot:
+        times_encoder = OneHotEncoder()
+        transformed_time = times_encoder.transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
+        times_df = pd.DataFrame(transformed_time, columns=times_encoder.get_feature_names())
 
-        return x_train
+        dayOfWeek_encoder = OneHotEncoder()
+        transformed_dayOfWeek = dayOfWeek_encoder.transform(df['day_of_week'].to_numpy().reshape(-1, 1))
+        dayOfWeek_df = pd.DataFrame(transformed_dayOfWeek, columns=dayOfWeek_encoder.get_feature_names())
+
+        dept_encoder = OneHotEncoder()
+        transformed_dept = dept_encoder.transform(df['dept_type'].to_numpy().reshape(-1, 1))
+        dept_df = pd.DataFrame(transformed_dept, columns=dept_encoder.get_feature_names())
+
+        gender_encoder = OneHotEncoder()
+        transformed_gender = gender_encoder.transform(df['gender'].to_numpy().reshape(-1, 1))
+        gender_df = pd.DataFrame(transformed_gender, columns=gender_encoder.get_feature_names())
+
+        race_encoder = OneHotEncoder()
+        transformed_race = race_encoder.transform(df['race'].to_numpy().reshape(-1, 1))
+        race_df = pd.DataFrame(transformed_race, columns=race_encoder.get_feature_names())
+
+        df = pd.concat([times_df, dayOfWeek_df, dept_df, gender_df, race_df, df], axis=1).drop(
+            ['day_of_week', 'checkin_datetime', 'dept_type', 'gender', 'race'], axis=1)
+    return df
+
 
 # Model Training
 def trainModel(x_train, y_train):
