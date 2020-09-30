@@ -70,8 +70,10 @@ def trainModel(x_train, y_train):
 def predict():
     if request.method == 'POST':
         clientRequest = request.get_json()
-        df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
-                          columns=[d['label'] for d in clientRequest['cols']])
+        # df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
+        #                   columns=[d['label'] for d in clientRequest['cols']])
+        print("request ",clientRequest)
+        df = pd.DataFrame.from_dict(clientRequest)
         predict_data = getData(df)
         print("start prediction*******************************************")
         y_pred = np.array2string(model.predict(predict_data))
