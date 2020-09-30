@@ -54,24 +54,6 @@ def getData(df, onehot=True):
         print ("timesss ",df)
         print ("typessss ",type(df))
 
-        # dayOfWeek_encoder = OneHotEncoder()
-        # transformed_dayOfWeek = dayOfWeek_encoder.transform(df['day_of_week'].to_numpy().reshape(-1, 1))
-        # dayOfWeek_df = pd.DataFrame(transformed_dayOfWeek, columns=dayOfWeek_encoder.get_feature_names())
-        #
-        # dept_encoder = OneHotEncoder()
-        # transformed_dept = dept_encoder.transform(df['dept_type'].to_numpy().reshape(-1, 1))
-        # dept_df = pd.DataFrame(transformed_dept, columns=dept_encoder.get_feature_names())
-        #
-        # gender_encoder = OneHotEncoder()
-        # transformed_gender = gender_encoder.transform(df['gender'].to_numpy().reshape(-1, 1))
-        # gender_df = pd.DataFrame(transformed_gender, columns=gender_encoder.get_feature_names())
-        #
-        # race_encoder = OneHotEncoder()
-        # transformed_race = race_encoder.transform(df['race'].to_numpy().reshape(-1, 1))
-        # race_df = pd.DataFrame(transformed_race, columns=race_encoder.get_feature_names())
-        #
-        # df = pd.concat([times_df, dayOfWeek_df, dept_df, gender_df, race_df, df], axis=1).drop(
-        #     ['day_of_week', 'checkin_datetime', 'dept_type', 'gender', 'race'], axis=1)
     return df
 
 
@@ -86,7 +68,9 @@ def trainModel(x_train, y_train):
 def predict():
     if request.method == 'POST':
         clientRequest = request.get_json()
-        y_pred = np.array2string(model.predict(clientRequest))
+        df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
+                          columns=[d['label'] for d in clientRequest['cols']])
+        y_pred = np.array2string(model.predict(df))
         # y_pred = model.predict(test_data)
         return jsonify(y_pred)
 
