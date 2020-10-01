@@ -63,11 +63,12 @@ def getData(df, onehot=True):
 
 # Model Training
 def trainModel(x_train, y_train):
+    global model
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
-    return model
+    # return model
 
 
 @app.route("/app/getPredictionLR", methods=['POST'])
@@ -94,5 +95,5 @@ if __name__ == '__main__':
     x_data, y_data = readTrainingData()
     # train the model
     print("in main model training to be started****************")
-    modelTrained = trainModel(x_data, y_data)
+    trainModel(x_data, y_data)
     app.run(debug=True, host="0.0.0.0", port=50)
