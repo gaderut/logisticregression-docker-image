@@ -75,9 +75,10 @@ def predict():
         # df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
         #                   columns=[d['label'] for d in clientRequest['cols']])
         print("request ",clientRequest)
-        df = pd.DataFrame.from_dict(clientRequest)
+        # df = pd.DataFrame.from_dict(clientRequest)
+        df = pd.io.json.json_normalize(clientRequest, 'emp_id', 'dept_type','gender','race','day_of_week','checkin_datetime')
         print("request columns ",df.columns)
-        predict_data = getData(df,True)
+        predict_data = getData(df, True)
         print("start prediction*******************************************")
         y_pred = np.array2string(model.predict(predict_data))
         print("sending the response back **************************")
