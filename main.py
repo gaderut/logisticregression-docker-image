@@ -35,7 +35,7 @@ def readTrainingData():
     # condition to check which workflow
     rows = session.execute('SELECT * FROM employee')
     df = rows._current_rows
-    print("columns ", df.columns)
+    print("columns ", df['checkin_datetime'])
     data = getData(df)
     x = data.drop(['duration','uu_id'], axis=1).to_numpy()
     y = data['duration'].to_numpy()
