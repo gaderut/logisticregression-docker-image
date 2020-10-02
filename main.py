@@ -6,10 +6,9 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
 import pandas as pd
-from timeParser import timeParser
 import category_encoders as ce
+from sklearn.preprocessing import LabelEncoder
 
 app = Flask(__name__)
 CORS(app)
@@ -46,18 +45,21 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
-        data_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
+        # data_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
+        df = MultiColumnLabelEncoder(columns=['checkin_datetime', 'day_of_week','gender','dept_type','race']).fit_transform(df)
+        print("endcodes ****************",df)
+        print("columns encoded ************", df.columns)
         # times_encoder = times_encoder.fit_transform()
         # if flag == True:
         #     transformed_df = data_encoder.transform(df)
         # else:
         #     transformed_df = data_encoder.fit_transform(df)
 
-        transformed_df = data_encoder.fit_transform(df)
+        # transformed_df = data_encoder.fit_transform(df)
         # transformed_time = times_encoder.fit_transform(df['checkin_datetime'].to_numpy().reshape(-1, 1))
-        df = pd.DataFrame(transformed_df, columns=data_encoder.get_feature_names())
-        print ("timesss ", df)
-        print ("typessss ", type(df))
+        # df = pd.DataFrame(transformed_df, columns=data_encoder.get_feature_names(), drop_first=True)
+        # print ("timesss ", df)
+        # print ("typessss ", type(df))
     return df
 
 
@@ -88,6 +90,31 @@ def predict():
         print("sending the response back **************************")
         return str(y_pred)
 
+
+class MultiColumnLabelEncoder:
+    def __init__(self,columns = None):
+        self.columns = columns # array of column names to encode
+
+    def fit(self,X,y=None):
+        return self # not relevant here
+
+    def transform(self,X):
+        '''
+        Transforms columns of X specified in self.columns using
+        LabelEncoder(). If no columns specified, transforms all
+        columns in X.
+        '''
+        output = X.copy()
+        if self.columns is not None:
+            for col in self.columns:
+                output[col] = LabelEncoder().fit_transform(output[col])
+        else:
+            for colname,col in output.iteritems():
+                output[colname] = LabelEncoder().fit_transform(col)
+        return output
+
+    def fit_transform(self,X,y=None):
+        return self.fit(X,y).transform(X)
 
 if __name__ == '__main__':
     # get the training data from Cassandra
