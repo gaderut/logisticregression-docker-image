@@ -104,7 +104,7 @@ def trainModel(x_train, y_train):
 @app.route("/app/getPredictionLR", methods=['POST'])
 def predict():
     if request.method == 'POST':
-        clientRequest = request.json()
+        clientRequest = request.get_json()
         # df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
         #                   columns=[d['label'] for d in clientRequest['cols']])
         print("request ",clientRequest)
