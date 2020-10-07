@@ -72,7 +72,7 @@ def getData(df, onehot=True):
         for i, row in df.iterrows():
             print("df i ", i)
             print("df row ", row)
-            df.at[i, 'checkin_datetime'] = timeencodeDict[int(row['checkin_datetime'])]
+            df.at[i, 'checkin_datetime'] = timeencodeDict[row['checkin_datetime']]
             df.at[i, 'day_of_week'] = dayencodeDict[row['day_of_week']]
             df.at[i, 'gender'] = genderencodeDict[row['gender']]
         print("endcodes ****************",df)
