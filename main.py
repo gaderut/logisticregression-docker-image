@@ -124,7 +124,7 @@ def predict():
                           "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
         print("sending the response back **************************")
         for key, val in timeencodeDict.items():
-            if val == y_pred:
+            if val == model.predict(predict_data):
                 return str(key)
 
 
