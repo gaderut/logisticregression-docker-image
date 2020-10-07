@@ -70,9 +70,11 @@ def getData(df, onehot=True):
         #     i['dept_type'] = dayencodeDict[i['dept_type']]
         #     i['race'] = raceencodeDict[i['race']]
         for i, row in df.iterrows():
-            df.at[i, 'checkin_datetime'] = timeencodeDict[int(i['checkin_datetime'])]
-            df.at[i, 'day_of_week'] = dayencodeDict[i['day_of_week']]
-            df.at[i, 'gender'] = genderencodeDict[i['gender']]
+            print("df i ", i)
+            print("df row ", row)
+            # df.at[i, 'checkin_datetime'] = timeencodeDict[int(i['checkin_datetime'])]
+            # df.at[i, 'day_of_week'] = dayencodeDict[i['day_of_week']]
+            # df.at[i, 'gender'] = genderencodeDict[i['gender']]
         print("endcodes ****************",df)
         print("columns encoded ************", df.columns)
         # times_encoder = times_encoder.fit_transform()
