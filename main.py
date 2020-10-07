@@ -45,8 +45,34 @@ def readTrainingData():
 
 def getData(df, onehot=True):
     if onehot:
+        timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
+                          "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
+                          "11:30": 7, "12:00": 8, "12:30": 9, "13:00": 10,
+                          "13:30": 11, "14:00": 12, "14:30": 13, "15:00": 14,
+                          "15:30": 15, "16:00": 16, "16:30": 17,
+                          "17:00": 18, "17:30": 19, "18:00": 20,
+                          "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
+        dayencodeDict = {
+            'MON': 0, "TUE": 1, 'WED': 2, 'THU': 3, "FRI": 4
+        }
+        genderencodeDict = {
+            'male': 0, "female": 1
+        }
+        # raceencodeDict = {
+        #     'Asian': 0, "American": 1
+        # }
         # data_encoder = ce.OneHotEncoder(cols=["checkin_datetime", "day_of_week", "dept_type", "gender", "race"])
-        df = MultiColumnLabelEncoder(columns=['checkin_datetime', 'day_of_week','gender','dept_type','race']).fit_transform(df)
+        # df = MultiColumnLabelEncoder(columns=['checkin_datetime', 'day_of_week','gender','dept_type','race']).fit_transform(df)
+        # for i in df.rows:
+        #     i['day_of_week'] = dayencodeDict[i['day_of_week']]
+        #     i['checkin_datetime'] = timeencodeDict[i['checkin_datetime']]
+        #     i['gender'] = genderencodeDict[i['gender']]
+        #     i['dept_type'] = dayencodeDict[i['dept_type']]
+        #     i['race'] = raceencodeDict[i['race']]
+        for i, row in df.iterrows():
+            df.at[i, 'checkin_datetime'] = timeencodeDict[i['checkin_datetime']]
+            df.at[i, 'day_of_week'] = timeencodeDict[i['day_of_week']]
+            df.at[i, 'gender'] = timeencodeDict[i['gender']]
         print("endcodes ****************",df)
         print("columns encoded ************", df.columns)
         # times_encoder = times_encoder.fit_transform()
@@ -83,7 +109,7 @@ def predict():
         # df = pd.DataFrame.from_dict(clientRequest)
         # df = pd.io.json.json_normalize(clientRequest, 'emp_id', 'dept_type','gender','race','day_of_week','checkin_datetime')
         df = pd.json_normalize(clientRequest)
-        print("request columns ",df.columns)
+        print("request columns ", df.columns)
         predict_data = getData(df)
         print("start prediction*******************************************")
         y_pred = np.array2string(model.predict(predict_data))
@@ -92,7 +118,7 @@ def predict():
 
 
 class MultiColumnLabelEncoder:
-    def __init__(self,columns = None):
+    def __init__(self, columns = None):
         self.columns = columns # array of column names to encode
 
     def fit(self,X,y=None):
@@ -115,6 +141,7 @@ class MultiColumnLabelEncoder:
 
     def fit_transform(self,X,y=None):
         return self.fit(X,y).transform(X)
+
 
 if __name__ == '__main__':
     # get the training data from Cassandra
