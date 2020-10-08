@@ -105,6 +105,7 @@ def trainModel(x_train, y_train):
 def predict():
     if request.method == 'POST':
         clientRequest = request.get_json()
+        del clientRequest['time']
         # df = pd.DataFrame([[d['v'] for d in x['c']] for x in clientRequest['rows']],
         #                   columns=[d['label'] for d in clientRequest['cols']])
         print("request ",clientRequest)
