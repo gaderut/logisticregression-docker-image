@@ -115,8 +115,8 @@ def predict():
         print("request columns ", df.columns)
         predict_data = getData(df)
         print("start prediction*******************************************")
-        # model.predict(predict_data)
-        y_pred = np.array2string(model.predict(predict_data))
+        y_pred = model.predict(predict_data)
+        # y_pred = np.array2string(model.predict(predict_data))
         timedcodeDict = {0: "8:00", 1: "8:30", 2: "9:00",
                           3: "9:30", 4: "10:00", 5: "10:30", 6: "11:00",
                           7: "11:30", 8: "12:00", 9: "12:30", 10: "13:00",
