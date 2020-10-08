@@ -125,7 +125,8 @@ def predict():
                           18: "17:00", 19: "17:30", 20: "18:00",
                           21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         print("sending the response back **************************")
-        return timedcodeDict[int(round(y_pred[0]))]
+        # return timedcodeDict[int(round(y_pred[0]))]
+        return y_pred
 
 
 
