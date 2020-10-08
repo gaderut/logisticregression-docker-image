@@ -115,18 +115,17 @@ def predict():
         print("request columns ", df.columns)
         predict_data = getData(df)
         print("start prediction*******************************************")
+        # model.predict(predict_data)
         y_pred = np.array2string(model.predict(predict_data))
-        timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
-                          "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
-                          "11:30": 7, "12:00": 8, "12:30": 9, "13:00": 10,
-                          "13:30": 11, "14:00": 12, "14:30": 13, "15:00": 14,
-                          "15:30": 15, "16:00": 16, "16:30": 17,
-                          "17:00": 18, "17:30": 19, "18:00": 20,
-                          "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
+        timedcodeDict = {0: "8:00", 1: "8:30", 2: "9:00",
+                          3: "9:30", 4: "10:00", 5: "10:30", 6: "11:00",
+                          7: "11:30", 8: "12:00", 9: "12:30", 10: "13:00",
+                          11: "13:30", 12: "14:00", 13: "14:30", 14: "15:00",
+                          15: "15:30", 16: "16:00", 17: "16:30",
+                          18: "17:00", 19: "17:30", 20: "18:00",
+                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         print("sending the response back **************************")
-        for key, val in timeencodeDict.items():
-            if val == model.predict(predict_data):
-                return str(key)
+        return timedcodeDict[int(round(y_pred[0]))]
 
 
 
