@@ -13,6 +13,10 @@ from sklearn.preprocessing import LabelEncoder
 app = Flask(__name__)
 CORS(app)
 model = None
+client = None
+workflow = None
+wfspec = None
+componentIPMap = None
 
 # final_table_without_na.describe()
 # final_table_without_hadm = final_table_without_na.drop(columns = ['hadm_id'])
@@ -21,26 +25,23 @@ model = None
 # Model Training
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
-    global model
-    jsondata = request.get_json()
-    name = jsondata["name"]
-    # read table name and few more details
-    # workflow
-    # new employee
-    # break
-    for i, item in enumerate(jsondata["dataLoader"]):
-        print("getting json data from dataloader")
-    x_train, y_train = readTrainingData()
-
+    # first read data from manager
+    global client, workflow, wfspec, componentIPMap, model
+    workflowdata = request.get_json()
+    client = workflowdata["client_name"]
+    workflow = workflowdata["workflow"]
+    wfspec = workflowdata["workflow_specification"]
+    componentIPMap = workflowdata["ips"]
+    # then read training data from database
+    x_train, y_train = readTrainingData(client)
+    # then train the model
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
 
-
 def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
-
 
 # call this from training
 def readTrainingData(tablename):
@@ -49,19 +50,16 @@ def readTrainingData(tablename):
     session = cluster.connect('ccproj_db', wait_for_all_pools=True)
     session.row_factory = pandas_factory
     session.execute('USE ccproj_db')
-    # condition to check which workflow
-    #break
-    #depending on th workflow
-    if tablename in companies:
-        rows = session.execute('SELECT * FROM employee')
-        df = rows._current_rows
+
+    rows = session.execute('SELECT * FROM ' + tablename)
+    df = rows._current_rows
+
+    if df['uu_id']:
         print("columns ", df['checkin_datetime'])
         data = getData(df)
         x = data.drop(['duration', 'uu_id'], axis=1).to_numpy()
         y = data['duration'].to_numpy()
     else:
-        rows = session.execute('SELECT * FROM hospital')
-        df = rows._current_rows
         x = df.drop(['hadm_id'], axis=1).to_numpy()
         y = df['total_time_icu'].to_numpy()
 
@@ -86,8 +84,6 @@ def getData(df, onehot=True):
             'male': 0, "female": 1
         }
         for i, row in df.iterrows():
-            print("df i ", i)
-            print("df row ", row)
             df.at[i, 'checkin_datetime'] = timeencodeDict[row['checkin_datetime']]
             df.at[i, 'day_of_week'] = dayencodeDict[row['day_of_week']]
             df.at[i, 'gender'] = genderencodeDict[row['gender']]
