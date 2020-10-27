@@ -9,16 +9,17 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 import pandas as pd
 from logging.handlers import TimedRotatingFileHandler
+import time
+import requests
 
 
 app = Flask(__name__)
 CORS(app)
+workflowdata = None
 model = None
 client = None
 workflowId = None
-workflow = None
-wfspec = None
-componentIPMap = None
+lgr_startTime = None
 logger = logging.getLogger('logistic_regression')
 
 # final_table_without_na.describe()
@@ -29,13 +30,12 @@ logger = logging.getLogger('logistic_regression')
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
     # first read data from manager
-    global client, workflowId, workflow, wfspec, componentIPMap, model
+    global workflowdata, client, workflowId, model, lgr_startTime
+    lgr_startTime = time.process_time()
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
-    workflow = workflowdata["workflow"]
-    wfspec = workflowdata["workflow_specification"]
-    componentIPMap = workflowdata["ips"]
+
     # then read training data from database
     logger.info("calling function to read training data from database *************************")
     x_train, y_train = readTrainingData(client)
@@ -45,6 +45,7 @@ def trainModel():
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
+
 
 
 def pandas_factory(colnames, rows):
@@ -102,9 +103,10 @@ def getData(df, onehot=True):
 def predict():
     if request.method == 'POST':
         clientRequest = request.get_json()
-        del clientRequest['time']
-        logger.info("request ", clientRequest)
-        df = pd.json_normalize(clientRequest)
+        data = clientRequest['data']
+        del data['time']
+        logger.info("request ", data)
+        df = pd.json_normalize(data)
         logger.info("request columns ", df.columns)
         # encoding only if employee workflow otherwise no
         predict_data = getData(df)
@@ -119,10 +121,23 @@ def predict():
                          18: "17:00", 19: "17:30", 20: "18:00",
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         logger.info("sending the response back **************************")
+        lgr_endTime = time.process_time() - lgr_startTime
         return timedcodeDict[int(y_pred[0])]
 
-def nextFire():
-    print("ok")
+
+def nextFire(lgr_details):
+    wfspec = workflowdata["workflow_specification"]
+    ipMap = workflowdata["ips"]
+    nextComponent = wfspec[2][0]
+    nextIP = ipMap[nextComponent]
+    # add lgr entries in the json
+    # and call that component with its corresponding ip and call name along with the json
+    if nextComponent == 3: #svm
+        r1 = requests.post(url="http://" + nextIP + ":50/app/getPredictionLR",
+                       headers={'content-type': 'application/json'}, json=content)
+    else:
+        r1 = requests.post(url="http://" + nextIP + ":50/app/getPredictionLR",
+                           headers={'content-type': 'application/json'}, json=content)
 
 
 if __name__ == '__main__':
