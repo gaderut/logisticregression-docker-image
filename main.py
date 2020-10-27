@@ -26,6 +26,7 @@ logger = logging.getLogger('logistic_regression')
 # final_table_without_hadm = final_table_without_na.drop(columns = ['hadm_id'])
 # Splitting the Train and Test Dataset
 
+
 # Model Training
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
@@ -37,7 +38,7 @@ def trainModel():
     workflowId = workflowdata["workflow_id"]
 
     # then read training data from database
-    logger.info("calling function to read training data from database *************************")
+    logger.info(workflowId,"calling function to read training data from database *************************")
     x_train, y_train = readTrainingData(client)
     logger.info("model training started *************************")
     # then train the model
@@ -102,9 +103,11 @@ def getData(df, onehot=True):
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
+        # predict time
         clientRequest = request.get_json()
         data = clientRequest['data']
         del data['time']
+        # remove id for prediction
         logger.info("request ", data)
         df = pd.json_normalize(data)
         logger.info("request columns ", df.columns)
@@ -122,6 +125,7 @@ def predict():
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         logger.info("sending the response back **************************")
         lgr_endTime = time.process_time() - lgr_startTime
+        nextFire()
         return timedcodeDict[int(y_pred[0])]
 
 
@@ -129,9 +133,11 @@ def nextFire(lgr_details):
     wfspec = workflowdata["workflow_specification"]
     ipMap = workflowdata["ips"]
     nextComponent = wfspec[2][0]
+
     nextIP = ipMap[nextComponent]
     # add lgr entries in the json
     # and call that component with its corresponding ip and call name along with the json
+    # append to the end
     if nextComponent == 3: #svm
         r1 = requests.post(url="http://" + nextIP + ":50/app/getPredictionLR",
                        headers={'content-type': 'application/json'}, json=content)
@@ -142,6 +148,7 @@ def nextFire(lgr_details):
 
 if __name__ == '__main__':
     # get the training data from Cassandra
+    #read arguments
     fh = TimedRotatingFileHandler('logistic_regression',  when='midnight')
     fh.suffix = '%Y_%m_%d.log'
     formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
@@ -156,3 +163,6 @@ if __name__ == '__main__':
     trainModel(x_data, y_data)
     logger.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
+
+
+    #return error and message flask
