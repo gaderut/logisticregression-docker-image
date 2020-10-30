@@ -11,7 +11,7 @@ import pandas as pd
 from logging.handlers import TimedRotatingFileHandler
 import time
 import requests
-
+import sys
 
 app = Flask(__name__)
 CORS(app)
@@ -19,39 +19,51 @@ workflowdata = None
 model = None
 client = None
 workflowId = None
-lgr_startTime = None
 logger = logging.getLogger('logistic_regression')
-
-# final_table_without_na.describe()
-# final_table_without_hadm = final_table_without_na.drop(columns = ['hadm_id'])
-# Splitting the Train and Test Dataset
+lgr_analytics = {}
 
 
 # Model Training
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
     # first read data from manager
-    global workflowdata, client, workflowId, model, lgr_startTime
-    lgr_startTime = time.process_time()
+    global workflowdata, client, workflowId, model, lgr_analytics
+    training_startTime = time.process_time()
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
-
     # then read training data from database
-    logger.info(workflowId,"calling function to read training data from database *************************")
+    logger.info(workflowId, "calling function to read training data from database *************************")
     x_train, y_train = readTrainingData(client)
     logger.info("model training started *************************")
     # then train the model
     logger.info("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
-    print("model training complete*********************")
-
+    training_endTime = time.process_time() - training_startTime
+    lgr_analytics["training_startTime"] = training_startTime
+    lgr_analytics["training_endTime"] = training_endTime
+    logger.info("model training complete*********************")
+    return
 
 
 def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
 
+
+# def validation(usr_name):
+#     result = 0
+#     qry = "SELECT COUNT(*) FROM " + usr_name + ";"
+#     try:
+#         stat = self.session.prepare(qry)
+#         x = self.session.execute(stat)
+#         for row in x:
+#              result = row.count
+#     except:
+#         result = -1
+#         log.info("DataLoader validation: No Table found in Cassandra database.")
+#         print("DataLoader validation: No Table found in Cassandra database.")
+#     return result
 
 # call this from training
 def readTrainingData(tablename):
@@ -64,13 +76,14 @@ def readTrainingData(tablename):
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
 
-    if df['uu_id']:
+    if df['emp_id']:
         print("columns ", df['checkin_datetime'])
         data = getData(df)
-        x = data.drop(['duration', 'uu_id'], axis=1).to_numpy()
+        x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
         y = data['duration'].to_numpy()
     else:
-        x = df.drop(['hadm_id'], axis=1).to_numpy()
+        #encoding for hospital
+        x = df.drop(['uu_id', 'hadm_id', 'total_time_icu'], axis=1).to_numpy()
         y = df['total_time_icu'].to_numpy()
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
@@ -103,9 +116,11 @@ def getData(df, onehot=True):
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
-        # predict time
+        global lgr_analytics
+        predict_startTime = time.process_time()
         clientRequest = request.get_json()
         data = clientRequest['data']
+        del data['id'] # prediction data id
         del data['time']
         # remove id for prediction
         logger.info("request ", data)
@@ -124,32 +139,47 @@ def predict():
                          18: "17:00", 19: "17:30", 20: "18:00",
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         logger.info("sending the response back **************************")
-        lgr_endTime = time.process_time() - lgr_startTime
+        predict_endTime = time.process_time() - predict_startTime
+        lgr_analytics["predict_startTime"] = predict_startTime
+        lgr_analytics["predict_endTime"] = predict_endTime
+        lgr_analytics["lgr_prediction"] = timedcodeDict[int(y_pred[0])]
         nextFire()
         return timedcodeDict[int(y_pred[0])]
 
 
-def nextFire(lgr_details):
+def nextFire():
     wfspec = workflowdata["workflow_specification"]
     ipMap = workflowdata["ips"]
     nextComponent = wfspec[2][0]
+    nextIPport = ipMap[nextComponent]
+    ipp = nextIPport.split(":")
+    ipaddress = ipp[0]
+    port = ipp[1]
 
-    nextIP = ipMap[nextComponent]
-    # add lgr entries in the json
-    # and call that component with its corresponding ip and call name along with the json
-    # append to the end
-    if nextComponent == 3: #svm
-        r1 = requests.post(url="http://" + nextIP + ":50/app/getPredictionLR",
-                       headers={'content-type': 'application/json'}, json=content)
+    workflowdata["analytics"].append(lgr_analytics)
+
+    if nextComponent == "3":  # svm
+        r1 = requests.post(url="http://" + ipaddress + ":"+ port +"/svm/predict",
+                           headers={'content-type': 'application/json'}, json=workflowdata)
+    elif nextComponent == "4":
+        r1 = requests.post(url="http://" + ipaddress + ":"+ port +"/app/getPredictionLR",
+                           headers={'content-type': 'application/json'}, json=workflowdata)
     else:
-        r1 = requests.post(url="http://" + nextIP + ":50/app/getPredictionLR",
-                           headers={'content-type': 'application/json'}, json=content)
+        return "Error"
 
 
 if __name__ == '__main__':
     # get the training data from Cassandra
-    #read arguments
-    fh = TimedRotatingFileHandler('logistic_regression',  when='midnight')
+    # read arguments
+    print
+    print ("Number of arguments: ", len(sys.argv), 'arguments.')
+    print ("Argument List: ", str(sys.argv))
+    if len(sys.argv) > 1:
+        argument = sys.argv[1].split('-')
+    else:
+        logger.error("Include command line arguments in docker swarm command")
+        sys.exit(1)
+    fh = TimedRotatingFileHandler('logistic_regression', when='midnight')
     fh.suffix = '%Y_%m_%d.log'
     formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
     fh.setFormatter(formatter)
@@ -157,12 +187,11 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
-    x_data, y_data = readTrainingData()
+    x_data, y_data = readTrainingData(argument[1])
     # train the model
     logger.info("start training model on container launch ****************")
     trainModel(x_data, y_data)
     logger.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
 
-
-    #return error and message flask
+    # return error and message flask
