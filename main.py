@@ -81,7 +81,7 @@ def readTrainingData(tablename):
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
 
-    if df['emp_id']:
+    if 'emp_id' in df.columns:
         print("columns ", df['checkin_datetime'])
         data = getData(df)
         x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
@@ -176,7 +176,7 @@ def nextFire():
 if __name__ == '__main__':
     # get the training data from Cassandra
     # read arguments
-    workflow = os.environ['worflow']
+    workflow = os.environ['workflow']
     wspec = os.environ['workflow_specification']
     if os.environ['client_name'] is not None:
         table = os.environ['client_name']
