@@ -12,6 +12,7 @@ from logging.handlers import TimedRotatingFileHandler
 import time
 import requests
 import sys
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -171,13 +172,12 @@ def nextFire():
 if __name__ == '__main__':
     # get the training data from Cassandra
     # read arguments
-    print
-    print ("Number of arguments: ", len(sys.argv), 'arguments.')
-    print ("Argument List: ", str(sys.argv))
-    if len(sys.argv) > 1:
-        argument = sys.argv[1].split('-')
+    workflow = os.environ['worflow']
+    wspec = os.environ['workflow_specification']
+    if os.environ['client_name'] is not None:
+        table = os.environ['client_name']
     else:
-        logger.error("Include command line arguments in docker swarm command")
+        logger.error("Include variable client_name in docker swarm command")
         sys.exit(1)
     fh = TimedRotatingFileHandler('logistic_regression', when='midnight')
     fh.suffix = '%Y_%m_%d.log'
@@ -187,7 +187,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
-    x_data, y_data = readTrainingData(argument[1])
+    x_data, y_data = readTrainingData(table)
     # train the model
     logger.info("start training model on container launch ****************")
     trainModel(x_data, y_data)
