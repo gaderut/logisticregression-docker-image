@@ -35,16 +35,20 @@ def trainModel():
     workflowId = workflowdata["workflow_id"]
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
+    print("calling function to read training data from database *************************")
     x_train, y_train = readTrainingData(client)
     logger.info("model training started *************************")
+    print("model training started *************************")
     # then train the model
     logger.info("model training started *************************")
+    print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     training_endTime = time.process_time() - training_startTime
     lgr_analytics["training_startTime"] = training_startTime
     lgr_analytics["training_endTime"] = training_endTime
     logger.info("model training complete*********************")
+    print("model training complete*********************")
     return
 
 
