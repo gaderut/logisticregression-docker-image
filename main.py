@@ -137,6 +137,7 @@ def predict():
         clientRequest = request.get_json()
         data = clientRequest['data']
         del data['id']  # prediction data id
+        del data['emp_id']
         del data['time']
         # remove id for prediction
         logger.info("request ", data)
