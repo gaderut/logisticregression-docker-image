@@ -43,6 +43,7 @@ def trainModel():
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
+    workflowtype = workflowdata["workflow"]
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
@@ -59,7 +60,7 @@ def trainModel():
     lgr_analytics["training_endTime"] = training_endTime
     logger.info("model training complete*********************")
     print("model training complete*********************")
-    return
+    return str(workflowId+"#"+workflowtype+"#"+client)
 
 
 def pandas_factory(colnames, rows):
