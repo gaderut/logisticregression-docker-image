@@ -25,7 +25,7 @@ lgr_analytics = {}
 
 
 # Model Training at Launch
-def model(x_train, y_train):
+def modeltrain(x_train, y_train):
     global model
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
@@ -204,7 +204,7 @@ if __name__ == '__main__':
     x_data, y_data = readTrainingData(table)
     # train the model
     logger.info("start training model on container launch ****************")
-    model(x_data, y_data)
+    modeltrain(x_data, y_data)
     logger.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
 
