@@ -24,6 +24,16 @@ logger = logging.getLogger('logistic_regression')
 lgr_analytics = {}
 
 
+# Model Training at Launch
+def model(x_train, y_train):
+    global model
+    print("model training started *************************")
+    lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
+    model = lg_clf.fit(x_train, y_train)
+    print("model training complete*********************")
+    # return model
+
+
 # Model Training
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
@@ -87,7 +97,7 @@ def readTrainingData(tablename):
         x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
         y = data['duration'].to_numpy()
     else:
-        #encoding for hospital
+        # encoding for hospital
         x = df.drop(['uu_id', 'hadm_id', 'total_time_icu'], axis=1).to_numpy()
         y = df['total_time_icu'].to_numpy()
 
@@ -125,7 +135,7 @@ def predict():
         predict_startTime = time.process_time()
         clientRequest = request.get_json()
         data = clientRequest['data']
-        del data['id'] # prediction data id
+        del data['id']  # prediction data id
         del data['time']
         # remove id for prediction
         logger.info("request ", data)
@@ -164,10 +174,10 @@ def nextFire():
     workflowdata["analytics"].append(lgr_analytics)
 
     if nextComponent == "3":  # svm
-        r1 = requests.post(url="http://" + ipaddress + ":"+ port +"/svm/predict",
+        r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     elif nextComponent == "4":
-        r1 = requests.post(url="http://" + ipaddress + ":"+ port +"/app/getPredictionLR",
+        r1 = requests.post(url="http://" + ipaddress + ":" + port + "/app/getPredictionLR",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     else:
         return "Error"
@@ -194,7 +204,7 @@ if __name__ == '__main__':
     x_data, y_data = readTrainingData(table)
     # train the model
     logger.info("start training model on container launch ****************")
-    trainModel(x_data, y_data)
+    model(x_data, y_data)
     logger.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
 
