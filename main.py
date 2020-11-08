@@ -13,6 +13,7 @@ import time
 import requests
 import sys
 import os
+from flask import Response
 
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +32,7 @@ def modeltrain(x_train, y_train):
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
+    # record time
     # return model
 
 
@@ -55,12 +57,13 @@ def trainModel():
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
-    training_endTime = time.process_time() - training_startTime
-    lgr_analytics["training_startTime"] = training_startTime
-    lgr_analytics["training_endTime"] = training_endTime
+    training_endTime = time.process_time()
+    lgr_analytics["start_time"] = training_startTime
+    lgr_analytics["end_time"] = training_endTime
     logger.info("model training complete*********************")
     print("model training complete*********************")
-    return str(workflowId+"#"+workflowtype+"#"+client)
+    #change it
+    return Response(lgr_analytics, status=200, mimetype='application/json')
 
 
 def pandas_factory(colnames, rows):
@@ -139,7 +142,6 @@ def predict():
         del data['id']  # prediction data id
         del data['emp_id']
         del data['time']
-        # remove id for prediction
         logger.info("request ", data)
         df = pd.json_normalize(data)
         logger.info("request columns ", df.columns)
@@ -157,11 +159,12 @@ def predict():
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
         logger.info("sending the response back **************************")
         predict_endTime = time.process_time() - predict_startTime
-        lgr_analytics["predict_startTime"] = predict_startTime
-        lgr_analytics["predict_endTime"] = predict_endTime
+        lgr_analytics["start_time"] = predict_startTime
+        lgr_analytics["end_time"] = predict_endTime
         lgr_analytics["lgr_prediction"] = timedcodeDict[int(y_pred[0])]
         nextFire()
-        return timedcodeDict[int(y_pred[0])]
+        # return timedcodeDict[int(y_pred[0])]
+        return Response(lgr_analytics, status=200, mimetype='application/json')
 
 
 def nextFire():
@@ -179,7 +182,7 @@ def nextFire():
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     elif nextComponent == "4":
-        r1 = requests.post(url="http://" + ipaddress + ":" + port + "/app/getPredictionLR",
+        r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     else:
         return "Error"
