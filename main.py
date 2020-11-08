@@ -184,26 +184,33 @@ def predict():
 
 def nextFire():
     wfspec = workflowdata["workflow_specification"]
-    ipMap = workflowdata["ips"]
-    #find logistic regression ie.2
+    client = workflowdata["client_name"]
+    workflowtype = workflowdata["workflow"]
+    # nextComponent = wfspec[2][0]
     for i, lst in enumerate(wfspec):
         for j, component in enumerate(lst):
             if component == "2":
                 indexLR = i
     # indexLR = wfspec.index(2)
-    nextComponent = wfspec[indexLR + 1][0]
-    # nextComponent = wfspec[2][0]
-    nextIPport = ipMap[nextComponent]
-    ipp = nextIPport.split(":")
-    ipaddress = ipp[0]
-    port = ipp[1]
+    if indexLR == len(wfspec):
+        nextComponent = 4
+    else:
+        nextComponent = wfspec[indexLR + 1][0]
 
     workflowdata["analytics"].append(lgr_analytics)
 
     if nextComponent == "3":  # svm
+        nextIPport = ipaddressMap[nextComponent]
+        ipp = nextIPport.split(":")
+        ipaddress = ipp[0]
+        port = ipp[1]
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     elif nextComponent == "4":
+        nextIPport = ipaddressMap[workflowtype+"#"+client]
+        ipp = nextIPport.split(":")
+        ipaddress = ipp[0]
+        port = ipp[1]
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     else:
