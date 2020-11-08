@@ -21,8 +21,21 @@ workflowdata = None
 model = None
 client = None
 workflowId = None
+ipaddressMap = None
 logger = logging.getLogger('logistic_regression')
 lgr_analytics = {}
+
+@app.route("/lgr/readip", methods=['POST'])
+def readIPs():
+    # workflow spec from here
+    global workflowdata, client, workflowId, ipaddressMap
+    workflowdata = request.get_json()
+    client = workflowdata["client_name"]
+    workflowId = workflowdata["workflow_id"]
+    workflowtype = workflowdata["workflow"]
+    newip = workflowdata["ips"]
+    ipaddressMap[workflowtype + "#" + client] = newip["analytics"]
+    return 200
 
 
 # Model Training at Launch
@@ -40,12 +53,14 @@ def modeltrain(x_train, y_train):
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
     # first read data from manager
-    global workflowdata, client, workflowId, model, lgr_analytics
+    global workflowdata, client, workflowId, model, lgr_analytics, ipaddressMap
     training_startTime = time.process_time()
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
     workflowtype = workflowdata["workflow"]
+    ipaddressMap = workflowdata["ips"]
+    ipaddressMap[workflowtype+"#"+client] = ipaddressMap["analytics"]
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
@@ -161,7 +176,7 @@ def predict():
         predict_endTime = time.process_time() - predict_startTime
         lgr_analytics["start_time"] = predict_startTime
         lgr_analytics["end_time"] = predict_endTime
-        lgr_analytics["lgr_prediction"] = timedcodeDict[int(y_pred[0])]
+        lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
         return Response(lgr_analytics, status=200, mimetype='application/json')
@@ -170,7 +185,14 @@ def predict():
 def nextFire():
     wfspec = workflowdata["workflow_specification"]
     ipMap = workflowdata["ips"]
-    nextComponent = wfspec[2][0]
+    #find logistic regression ie.2
+    for i, lst in enumerate(wfspec):
+        for j, component in enumerate(lst):
+            if component == "2":
+                indexLR = i
+    # indexLR = wfspec.index(2)
+    nextComponent = wfspec[indexLR + 1][0]
+    # nextComponent = wfspec[2][0]
     nextIPport = ipMap[nextComponent]
     ipp = nextIPport.split(":")
     ipaddress = ipp[0]
@@ -192,7 +214,6 @@ if __name__ == '__main__':
     # get the training data from Cassandra
     # read arguments
     workflow = os.environ['workflow']
-    wspec = os.environ['workflow_specification']
     if os.environ['client_name'] is not None:
         table = os.environ['client_name']
     else:
