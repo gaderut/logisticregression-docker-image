@@ -20,21 +20,28 @@ CORS(app)
 workflowdata = None
 model = None
 client = None
+workflowType = None
 workflowId = None
 ipaddressMap = None
+workflowspec = None
 logger = logging.getLogger('logistic_regression')
 lgr_analytics = {}
 
-@app.route("/lgr/readip", methods=['POST'])
+
+@app.route("/lgr/ipwfspec", methods=['POST'])
 def readIPs():
-    # workflow spec from here
-    global workflowdata, client, workflowId, ipaddressMap
+    global workflowdata, client, workflowId, ipaddressMap, workflowspec
+
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
     workflowtype = workflowdata["workflow"]
+    workflowspec = workflowdata["workflow_specification"]
+
     newip = workflowdata["ips"]
-    ipaddressMap[workflowtype + "#" + client] = newip["analytics"]
+    id = workflowtype + "#" + client
+    if id not in ipaddressMap:
+        ipaddressMap[workflowtype + "#" + client] = newip["analytics"]
     return 200
 
 
@@ -46,25 +53,29 @@ def modeltrain(x_train, y_train):
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
     # record time
-    # return model
 
 
 # Model Training
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
     # first read data from manager
-    global workflowdata, client, workflowId, model, lgr_analytics, ipaddressMap
-    training_startTime = time.process_time()
+    global workflowdata, client, workflowId, model, lgr_analytics, ipaddressMap, workflowType, workflowspec
+
+    lgr_analytics["start_time"] = time.process_time()
+
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     workflowId = workflowdata["workflow_id"]
-    workflowtype = workflowdata["workflow"]
+    workflowType = workflowdata["workflow"]
+    workflowspec = workflowdata["workflow_specification"]
     ipaddressMap = workflowdata["ips"]
-    ipaddressMap[workflowtype+"#"+client] = ipaddressMap["analytics"]
+    ipaddressMap[workflowType+"#"+client] = ipaddressMap["analytics"]
+
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
     x_train, y_train = readTrainingData(client)
+
     logger.info("model training started *************************")
     print("model training started *************************")
     # then train the model
@@ -72,12 +83,9 @@ def trainModel():
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
-    training_endTime = time.process_time()
-    lgr_analytics["start_time"] = training_startTime
-    lgr_analytics["end_time"] = training_endTime
+    lgr_analytics["end_time"] = time.process_time()
     logger.info("model training complete*********************")
     print("model training complete*********************")
-    #change it
     return Response(lgr_analytics, status=200, mimetype='application/json')
 
 
@@ -99,7 +107,7 @@ def pandas_factory(colnames, rows):
 #         print("DataLoader validation: No Table found in Cassandra database.")
 #     return result
 
-# call this from training
+
 def readTrainingData(tablename):
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
     log.info("setting DB keyspace . . .")
@@ -150,21 +158,23 @@ def getData(df, onehot=True):
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
-        global lgr_analytics
-        predict_startTime = time.process_time()
-        clientRequest = request.get_json()
-        data = clientRequest['data']
+        global lgr_analytics, workflowdata
+        lgr_analytics["start_time"] = time.process_time()
+
+        workflowdata = request.get_json()
+        data = workflowdata['data']
         del data['id']  # prediction data id
         del data['emp_id']
         del data['time']
         logger.info("request ", data)
+
         df = pd.json_normalize(data)
-        logger.info("request columns ", df.columns)
         # encoding only if employee workflow otherwise no
         predict_data = getData(df)
         logger.info("start prediction*******************************************")
         y_pred = model.predict(predict_data)
         y_pred = list(y_pred)
+
         timedcodeDict = {0: "8:00", 1: "8:30", 2: "9:00",
                          3: "9:30", 4: "10:00", 5: "10:30", 6: "11:00",
                          7: "11:30", 8: "12:00", 9: "12:30", 10: "13:00",
@@ -172,10 +182,8 @@ def predict():
                          15: "15:30", 16: "16:00", 17: "16:30",
                          18: "17:00", 19: "17:30", 20: "18:00",
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
-        logger.info("sending the response back **************************")
-        predict_endTime = time.process_time() - predict_startTime
-        lgr_analytics["start_time"] = predict_startTime
-        lgr_analytics["end_time"] = predict_endTime
+
+        lgr_analytics["end_time"] = time.process_time()
         lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
@@ -183,19 +191,21 @@ def predict():
 
 
 def nextFire():
-    wfspec = workflowdata["workflow_specification"]
+    global client, workflowspec, workflowType
+    workflowspec = workflowdata["workflow_specification"]
     client = workflowdata["client_name"]
-    workflowtype = workflowdata["workflow"]
+    workflowType = workflowdata["workflow"]
+
     # nextComponent = wfspec[2][0]
-    for i, lst in enumerate(wfspec):
+    for i, lst in enumerate(workflowspec):
         for j, component in enumerate(lst):
             if component == "2":
                 indexLR = i
     # indexLR = wfspec.index(2)
-    if indexLR == len(wfspec):
-        nextComponent = 4
+    if indexLR+1 < len(workflowspec):
+        nextComponent = workflowspec[indexLR + 1][0]
     else:
-        nextComponent = wfspec[indexLR + 1][0]
+        nextComponent = 4
 
     workflowdata["analytics"].append(lgr_analytics)
 
@@ -207,7 +217,7 @@ def nextFire():
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     elif nextComponent == "4":
-        nextIPport = ipaddressMap[workflowtype+"#"+client]
+        nextIPport = ipaddressMap[workflowType+"#"+client]
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
@@ -218,14 +228,15 @@ def nextFire():
 
 
 if __name__ == '__main__':
-    # get the training data from Cassandra
-    # read arguments
-    workflow = os.environ['workflow']
+    global client, workflowType
+    workflowType = os.environ['workflow']
+    client = ""
     if os.environ['client_name'] is not None:
-        table = os.environ['client_name']
+        client = os.environ['client_name']
     else:
         logger.error("Include variable client_name in docker swarm command")
         sys.exit(1)
+
     fh = TimedRotatingFileHandler('logistic_regression', when='midnight')
     fh.suffix = '%Y_%m_%d.log'
     formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
@@ -234,8 +245,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
-    x_data, y_data = readTrainingData(table)
-    # train the model
+    x_data, y_data = readTrainingData(client)
     logger.info("start training model on container launch ****************")
     modeltrain(x_data, y_data)
     logger.info("**** start listening ****")
