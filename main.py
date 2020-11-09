@@ -108,7 +108,10 @@ def pandas_factory(colnames, rows):
 #     return result
 
 
-def readTrainingData(tablename):
+def readTrainingData(tablename, workflow):
+    global client, workflowtype
+    client  = tablename
+    workflowtype = workflow
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
     log.info("setting DB keyspace . . .")
     session = cluster.connect('ccproj_db', wait_for_all_pools=True)
@@ -228,11 +231,10 @@ def nextFire():
 
 
 if __name__ == '__main__':
-    global client, workflowType
-    workflowType = os.environ['workflow']
-    client = ""
+    workflowtype = os.environ['workflow']
+    table = ""
     if os.environ['client_name'] is not None:
-        client = os.environ['client_name']
+        table = os.environ['client_name']
     else:
         logger.error("Include variable client_name in docker swarm command")
         sys.exit(1)
@@ -245,7 +247,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
-    x_data, y_data = readTrainingData(client)
+    x_data, y_data = readTrainingData(table,workflowtype)
     logger.info("start training model on container launch ****************")
     modeltrain(x_data, y_data)
     logger.info("**** start listening ****")
