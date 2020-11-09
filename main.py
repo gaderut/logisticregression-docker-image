@@ -123,20 +123,21 @@ def readTrainingData(tablename, workflow):
 
     if 'emp_id' in df.columns:
         print("columns ", df['checkin_datetime'])
-        data = getData(df)
+        data = encodeEmployee(df)
         x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
         y = data['duration'].to_numpy()
     else:
         # encoding for hospital
-        x = df.drop(['uu_id', 'hadm_id', 'total_time_icu'], axis=1).to_numpy()
-        y = df['total_time_icu'].to_numpy()
+        data = encodeHospital(df)
+        x = data.drop(['uu_id', 'hadm_id', 'total_time_icu'], axis=1).to_numpy()
+        y = data['total_time_icu'].to_numpy()
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
     return x_train, y_train
 
 
-def getData(df, onehot=True):
+def encodeEmployee(df, onehot=True):
     if onehot:
         timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
                           "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
@@ -158,6 +159,24 @@ def getData(df, onehot=True):
     return df
 
 
+def encodeHospital(df, onehot=True):
+    if onehot:
+        timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
+                          "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
+                          "11:30": 7, "12:00": 8, "12:30": 9, "13:00": 10,
+                          "13:30": 11, "14:00": 12, "14:30": 13, "15:00": 14,
+                          "15:30": 15, "16:00": 16, "16:30": 17,
+                          "17:00": 18, "17:30": 19, "18:00": 20,
+                          "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
+        dayencodeDict = {
+            'MON': 0, "TUE": 1, 'WED': 2, 'THU': 3, "FRI": 4
+        }
+        for i, row in df.iterrows():
+            df.at[i, 'checkin_datetime'] = timeencodeDict[row['checkin_datetime']]
+            df.at[i, 'day_of_week'] = dayencodeDict[row['day_of_week']]
+    return df
+
+
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
@@ -166,14 +185,19 @@ def predict():
 
         workflowdata = request.get_json()
         data = workflowdata['data']
-        del data['id']  # prediction data id
-        del data['emp_id']
-        del data['time']
         logger.info("request ", data)
+        del data['id']  # prediction data id
+        del data['time']
 
-        df = pd.json_normalize(data)
-        # encoding only if employee workflow otherwise no
-        predict_data = getData(df)
+        if "emp_id" in data:
+            del data['emp_id']
+            df = pd.json_normalize(data)
+            predict_data = encodeEmployee(df)
+        else:
+            del data['hadm_id']
+            df = pd.json_normalize(data)
+            predict_data = encodeHospital(df)
+
         logger.info("start prediction*******************************************")
         y_pred = model.predict(predict_data)
         y_pred = list(y_pred)
@@ -227,7 +251,7 @@ def nextFire():
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata)
     else:
-        return "Error"
+        return jsonify(success=False)
 
 
 if __name__ == '__main__':
