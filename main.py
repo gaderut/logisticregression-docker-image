@@ -242,14 +242,14 @@ def nextFire():
         ipaddress = ipp[0]
         port = ipp[1]
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
-                           headers={'content-type': 'application/json'}, json=workflowdata)
+                           headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     elif nextComponent == "4":
         nextIPport = ipaddressMap[workflowType+"#"+client]
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
-                           headers={'content-type': 'application/json'}, json=workflowdata)
+                           headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     else:
         return jsonify(success=False)
 
