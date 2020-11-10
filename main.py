@@ -169,7 +169,7 @@ def encodeHospital(df, onehot=True):
                           "17:00": 18, "17:30": 19, "18:00": 20,
                           "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
         dayencodeDict = {
-            'MON': 0, "TUE": 1, 'WED': 2, 'THU': 3, "FRI": 4
+            'MON': 0, "TUE": 1, 'WED': 2, 'THU': 3, "FRI": 4, "SAT": 5, "SUN": 6
         }
         for i, row in df.iterrows():
             df.at[i, 'checkin_datetime'] = timeencodeDict[row['checkin_datetime']]
