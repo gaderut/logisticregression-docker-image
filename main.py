@@ -129,8 +129,8 @@ def readTrainingData(tablename, workflow):
     else:
         # encoding for hospital
         data = encodeHospital(df)
-        x = data.drop(['uu_id', 'hadm_id', 'total_time_icu'], axis=1).to_numpy()
-        y = data['total_time_icu'].to_numpy()
+        x = data.drop(['uu_id', 'hadm_id', 'duration'], axis=1).to_numpy()
+        y = data['duration'].to_numpy()
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
