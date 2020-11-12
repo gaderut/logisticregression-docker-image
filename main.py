@@ -97,8 +97,8 @@ def pandas_factory(colnames, rows):
 #     result = 0
 #     qry = "SELECT COUNT(*) FROM " + usr_name + ";"
 #     try:
-#         stat = self.session.prepare(qry)
-#         x = self.session.execute(stat)
+#         stat = session.prepare(qry)
+#         x = session.execute(stat)
 #         for row in x:
 #              result = row.count
 #     except:
@@ -117,6 +117,17 @@ def readTrainingData(tablename, workflow):
     session = cluster.connect('ccproj_db', wait_for_all_pools=True)
     session.row_factory = pandas_factory
     session.execute('USE ccproj_db')
+    result = 0
+    qry = "SELECT COUNT(*) FROM " + tablename + ";"
+    try:
+        stat = session.prepare(qry)
+        x = session.execute(stat)
+        for row in x:
+            result = row.count
+    except:
+        result = -1
+        sys.exit(1)
+        print("Table does not exists in Cassandra, shutting down Logistic regression component")
 
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
