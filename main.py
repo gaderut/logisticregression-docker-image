@@ -50,22 +50,22 @@ def readIPs():
 def modeltrain(x_train, y_train):
     global model
     print("model training started *************************")
-    test = {}
-    test["workflow_specification"] = [["1"], ["3"], ["2"]]
-    ws = test["workflow_specification"]
-    print("*** workflow specification*** ", ws)
-    logger.info("*** workflow specification*** ", ws)
-    for i, lst in enumerate(ws):
-        for j, component in enumerate(lst):
-            if component == "2":
-                indexLR = i
-    # indexLR = wfspec.index(2)
-    if indexLR+1 < len(ws):
-        nextComponent = ws[indexLR + 1][0]
-    else:
-        nextComponent = 4
-    print("***** the next component is ****** ", nextComponent)
-    logger.info("***** the next component is ****** ", nextComponent)
+    # test = {}
+    # test["workflow_specification"] = [["1"], ["3"], ["2"]]
+    # ws = test["workflow_specification"]
+    # print("*** workflow specification*** ", ws)
+    # logger.info("*** workflow specification*** ", ws)
+    # for i, lst in enumerate(ws):
+    #     for j, component in enumerate(lst):
+    #         if component == "2":
+    #             indexLR = i
+    # # indexLR = wfspec.index(2)
+    # if indexLR+1 < len(ws):
+    #     nextComponent = ws[indexLR + 1][0]
+    # else:
+    #     nextComponent = 4
+    # print("***** the next component is ****** ", nextComponent)
+    # logger.info("***** the next component is ****** ", nextComponent)
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
