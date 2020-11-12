@@ -30,11 +30,11 @@ lgr_analytics = {}
 
 @app.route("/lgr/ipwfspec", methods=['POST'])
 def readIPs():
-    global workflowdata, client, workflowId, ipaddressMap, workflowspec
+    global workflowdata, client, ipaddressMap, workflowspec
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
-    workflowId = workflowdata["workflow_id"]
+    # workflowId = workflowdata["workflow_id"]
     workflowtype = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
@@ -60,13 +60,13 @@ def modeltrain(x_train, y_train):
 @app.route("/lgr/train", methods=['POST'])
 def trainModel():
     # first read data from manager
-    global workflowdata, client, workflowId, model, lgr_analytics, ipaddressMap, workflowType, workflowspec
+    global workflowdata, client, model, lgr_analytics, ipaddressMap, workflowType, workflowspec
 
     lgr_analytics["start_time"] = time.process_time()
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
-    workflowId = workflowdata["workflow_id"]
+    # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
