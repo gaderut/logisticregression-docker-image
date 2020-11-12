@@ -231,8 +231,8 @@ def predict():
 
 
 def nextFire():
-    global client, workflowspec, workflowType
-    workflowspec = workflowdata["workflow_specification"]
+    global client, workflowType
+    # workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
