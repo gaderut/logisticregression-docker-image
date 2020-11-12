@@ -301,7 +301,7 @@ if __name__ == '__main__':
     else:
         logger.error("Include variable client_name in docker swarm command")
         sys.exit(1)
-    filename = "/home/generic/rutuja/logistic_regression"
+    filename = "logistic_regression"
     fh = TimedRotatingFileHandler(filename, when='midnight')
     fh.suffix = '%Y_%m_%d.log'
     formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
