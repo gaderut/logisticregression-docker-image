@@ -71,7 +71,7 @@ def trainModel():
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
     ipaddressMap = workflowdata["ips"]
-    ipaddressMap[workflowType+"#"+client] = ipaddressMap["analytics"]
+    ipaddressMap[workflowType+"#"+client] = ipaddressMap["4"]
 
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
@@ -193,6 +193,7 @@ def encodeHospital(df, onehot=True):
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
+        print("***********prediction started*************")
         global lgr_analytics, workflowdata
         lgr_analytics["start_time"] = time.process_time()
 
@@ -204,6 +205,7 @@ def predict():
 
         if "emp_id" in data:
             del data['emp_id']
+            print("**********in employee *************")
             df = pd.json_normalize(data)
             predict_data = encodeEmployee(df)
         else:
@@ -225,6 +227,7 @@ def predict():
 
         lgr_analytics["end_time"] = time.process_time()
         lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
+        print("********** calling nextFire() in predict **********")
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
         return Response(lgr_analytics, status=200, mimetype='application/json')
@@ -232,6 +235,7 @@ def predict():
 
 def nextFire():
     global client, workflowType
+    print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
