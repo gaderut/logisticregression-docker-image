@@ -69,7 +69,21 @@ def trainModel():
     # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
+
     print("*** workflow specification*** ", workflowspec)
+    logger.info("*** workflow specification*** ", workflowspec)
+    for i, lst in enumerate(workflowspec):
+        for j, component in enumerate(lst):
+            if component == "2":
+                indexLR = i
+    # indexLR = wfspec.index(2)
+    if indexLR+1 < len(workflowspec):
+        nextComponent = workflowspec[indexLR + 1][0]
+    else:
+        nextComponent = 4
+    print("***** the next component is ****** ", nextComponent)
+    logger.info("***** the next component is ****** ", nextComponent)
+
     ipaddressMap = workflowdata["ips"]
     ipaddressMap[workflowType+"#"+client] = ipaddressMap["4"]
 
@@ -233,11 +247,13 @@ def predict():
         # return Response(lgr_analytics, status=200, mimetype='application/json')
         return jsonify(lgr_analytics), 200
 
+
 def nextFire():
     global client, workflowType
     print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
+    logger.info("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
 
@@ -252,6 +268,7 @@ def nextFire():
     else:
         nextComponent = 4
     print("***** the next component is ****** ", nextComponent)
+    logger.info("***** the next component is ****** ", nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
 
     if nextComponent == "3":  # svm
@@ -284,8 +301,8 @@ if __name__ == '__main__':
     else:
         logger.error("Include variable client_name in docker swarm command")
         sys.exit(1)
-
-    fh = TimedRotatingFileHandler('logistic_regression', when='midnight')
+    filename = "/home/generic/rutuja/logistic_regression"
+    fh = TimedRotatingFileHandler(filename, when='midnight')
     fh.suffix = '%Y_%m_%d.log'
     formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
     fh.setFormatter(formatter)
