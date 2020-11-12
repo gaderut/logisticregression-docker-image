@@ -88,8 +88,8 @@ def trainModel():
     lgr_analytics["end_time"] = time.process_time()
     logger.info("model training complete*********************")
     print("model training complete*********************")
-    return Response(lgr_analytics, status=200, mimetype='application/json')
-
+    # return Response(lgr_analytics, status=200, mimetype='application/json')
+    return jsonify(lgr_analytics), 200
 
 def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
@@ -230,8 +230,8 @@ def predict():
         print("********** calling nextFire() in predict **********")
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
-        return Response(lgr_analytics, status=200, mimetype='application/json')
-
+        # return Response(lgr_analytics, status=200, mimetype='application/json')
+        return jsonify(lgr_analytics), 200
 
 def nextFire():
     global client, workflowType
