@@ -76,7 +76,7 @@ def trainModel():
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
-    x_train, y_train = readTrainingData(client)
+    x_train, y_train = readTrainingData(client,workflowType)
 
     logger.info("model training started *************************")
     print("model training started *************************")
