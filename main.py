@@ -37,6 +37,7 @@ def readIPs():
     workflowId = workflowdata["workflow_id"]
     workflowtype = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
+    print("*** workflow specification*** ", workflowspec)
 
     newip = workflowdata["ips"]
     id = workflowtype + "#" + client
@@ -68,6 +69,7 @@ def trainModel():
     workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
+    print("*** workflow specification*** ", workflowspec)
     ipaddressMap = workflowdata["ips"]
     ipaddressMap[workflowType+"#"+client] = ipaddressMap["analytics"]
 
@@ -231,6 +233,7 @@ def predict():
 def nextFire():
     global client, workflowspec, workflowType
     workflowspec = workflowdata["workflow_specification"]
+    print("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
 
@@ -244,7 +247,7 @@ def nextFire():
         nextComponent = workflowspec[indexLR + 1][0]
     else:
         nextComponent = 4
-
+    print("***** the next component is ****** ", nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
 
     if nextComponent == "3":  # svm
@@ -252,6 +255,8 @@ def nextFire():
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
+        print("next component ip ",ipaddress)
+        print("next component port ", port)
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     elif nextComponent == "4":
@@ -259,6 +264,8 @@ def nextFire():
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
+        print("next component ip ", ipaddress)
+        print("next component port ", port)
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     else:
