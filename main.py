@@ -51,7 +51,7 @@ def modeltrain(x_train, y_train):
     global model
     print("model training started *************************")
     test = {}
-    test["workflow_specification"] = [["1","2"], ["3"]]
+    test["workflow_specification"] = [["1"], ["3"], ["2"]]
     ws = test["workflow_specification"]
     print("*** workflow specification*** ", ws)
     logger.info("*** workflow specification*** ", ws)
