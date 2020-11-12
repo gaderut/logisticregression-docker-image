@@ -50,6 +50,22 @@ def readIPs():
 def modeltrain(x_train, y_train):
     global model
     print("model training started *************************")
+    test = {}
+    test["workflow_specification"] = [["1"], ["2"], ["3"]]
+    ws = test["workflow_specification"]
+    print("*** workflow specification*** ", ws)
+    logger.info("*** workflow specification*** ", ws)
+    for i, lst in enumerate(ws):
+        for j, component in enumerate(lst):
+            if component == "2":
+                indexLR = i
+    # indexLR = wfspec.index(2)
+    if indexLR+1 < len(ws):
+        nextComponent = ws[indexLR + 1][0]
+    else:
+        nextComponent = 4
+    print("***** the next component is ****** ", nextComponent)
+    logger.info("***** the next component is ****** ", nextComponent)
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
@@ -69,21 +85,6 @@ def trainModel():
     # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
-
-    print("*** workflow specification*** ", workflowspec)
-    logger.info("*** workflow specification*** ", workflowspec)
-    for i, lst in enumerate(workflowspec):
-        for j, component in enumerate(lst):
-            if component == "2":
-                indexLR = i
-    # indexLR = wfspec.index(2)
-    if indexLR+1 < len(workflowspec):
-        nextComponent = workflowspec[indexLR + 1][0]
-    else:
-        nextComponent = 4
-    print("***** the next component is ****** ", nextComponent)
-    logger.info("***** the next component is ****** ", nextComponent)
-
     ipaddressMap = workflowdata["ips"]
     ipaddressMap[workflowType+"#"+client] = ipaddressMap["4"]
 
