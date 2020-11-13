@@ -1,7 +1,8 @@
 import logging as log
 
 import numpy as np
-import logging
+# import logging
+import logging as log, traceback
 from cassandra.cluster import Cluster
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -24,8 +25,9 @@ workflowType = None
 workflowId = None
 ipaddressMap = None
 workflowspec = None
-logger = logging.getLogger('logistic_regression')
+# logger = logging.getLogger('logistic_regression')
 lgr_analytics = {}
+log.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 
 @app.route("/lgr/ipwfspec", methods=['POST'])
@@ -41,9 +43,11 @@ def readIPs():
 
     newip = workflowdata["ips"]
     id = workflowtype + "#" + client
-    if id not in ipaddressMap:
-        ipaddressMap[workflowtype + "#" + client] = newip["analytics"]
-    return 200
+    for i in range(len(ipaddressMap)):
+        if id not in ipaddressMap:
+            ipaddressMap[workflowtype + "#" + client] = newip["4"]
+            log("ip address hashmap updated for ", id)
+    return str(id), 200
 
 
 # Model Training at Launch
@@ -72,20 +76,20 @@ def trainModel():
     ipaddressMap[workflowType+"#"+client] = ipaddressMap["4"]
 
     # then read training data from database
-    logger.info(workflowId, "calling function to read training data from database *************************")
+    log.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
 
     x_train, y_train, resultt = readTrainingData(client,workflowType)
 
-    logger.info("model training started *************************")
+    log.info("model training started *************************")
     print("model training started *************************")
     # then train the model
-    logger.info("model training started *************************")
+    log.info("model training started *************************")
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     lgr_analytics["end_time"] = time.time()
-    logger.info("model training complete*********************")
+    log.info("model training complete*********************")
     print("model training complete*********************")
     # return Response(lgr_analytics, status=200, mimetype='application/json')
     if resultt == -1:
@@ -216,7 +220,7 @@ def predict():
             df = pd.json_normalize(data)
             predict_data = encodeHospital(df)
 
-        logger.info("start prediction*******************************************")
+        log.info("start prediction*******************************************")
         y_pred = model.predict(predict_data)
         y_pred = list(y_pred)
 
@@ -242,7 +246,7 @@ def nextFire():
     print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
-    logger.info("*** workflow specification*** ", workflowspec)
+    log.info("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
 
@@ -257,7 +261,7 @@ def nextFire():
     else:
         nextComponent = 4
     print("***** the next component is ****** ", nextComponent)
-    logger.info("***** the next component is ****** ", nextComponent)
+    log.info("***** the next component is ****** ", nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
 
     if nextComponent == "3":  # svm
@@ -288,24 +292,24 @@ if __name__ == '__main__':
     if os.environ['client_name'] is not None:
         table = os.environ['client_name']
     else:
-        logger.error("Include variable client_name in docker swarm command")
+        log.error("Include variable client_name in docker swarm command")
         sys.exit(1)
-    filename = "logistic_regression"
-    fh = TimedRotatingFileHandler(filename, when='midnight')
-    fh.suffix = '%Y_%m_%d.log'
-    formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    logger.setLevel(logging.WARNING)
+    # filename = "logistic_regression"
+    # fh = TimedRotatingFileHandler(filename, when='midnight')
+    # fh.suffix = '%Y_%m_%d.log'
+    # formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
+    # fh.setFormatter(formatter)
+    # logger.addHandler(fh)
+    # logger.setLevel(logging.WARNING)
 
-    logger.info("data read from Database ***********")
+    log.info("data read from Database ***********")
     rs = 0
     x_data, y_data, rs = readTrainingData(table,workflowtype)
     if rs == -1:
         sys.exit(1)
-    logger.info("start training model on container launch ****************")
+    log.info("start training model on container launch ****************")
     modeltrain(x_data, y_data)
-    logger.info("**** start listening ****")
+    log.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
 
     # return error and message flask
