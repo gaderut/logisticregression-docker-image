@@ -217,9 +217,9 @@ def predict():
 
         if "emp_id" in data:
             print("**********in employee *************")
-            list = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
+            featureList = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
             newdata = {}
-            for i in list:
+            for i in featureList:
                 newdata[i] = data[i]
             df = pd.json_normalize(newdata)
             predict_data = encodeEmployee(df)
