@@ -215,7 +215,7 @@ def predict():
         workflowdata = request.get_json()
         data = workflowdata['data']
         logger.info("request ", data)
-        del data['id']  # prediction data id
+        # del data['id']  # prediction data id
         del data['time']
 
         if "emp_id" in data:
