@@ -298,7 +298,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
-    x_data, y_data = readTrainingData(table,workflowtype)
+    x_data, y_data, rs = readTrainingData(table,workflowtype)
+    if rs == -1:
+        sys.exit(1)
     logger.info("start training model on container launch ****************")
     modeltrain(x_data, y_data)
     logger.info("**** start listening ****")
