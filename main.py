@@ -74,6 +74,7 @@ def trainModel():
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
+
     x_train, y_train, resultt = readTrainingData(client,workflowType)
 
     logger.info("model training started *************************")
@@ -88,9 +89,9 @@ def trainModel():
     print("model training complete*********************")
     # return Response(lgr_analytics, status=200, mimetype='application/json')
     if resultt == -1:
-        return jsonify(lgr_analytics), 200
-    else:
         return jsonify(lgr_analytics), 400
+    else:
+        return jsonify(lgr_analytics), 200
 
 
 def pandas_factory(colnames, rows):
@@ -298,6 +299,7 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     logger.info("data read from Database ***********")
+    rs = 0
     x_data, y_data, rs = readTrainingData(table,workflowtype)
     if rs == -1:
         sys.exit(1)
