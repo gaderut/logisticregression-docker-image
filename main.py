@@ -220,7 +220,7 @@ def predict():
             list = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
             newdata = {}
             for i in list:
-                newdata = data[i]
+                newdata[i] = data[i]
             df = pd.json_normalize(newdata)
             predict_data = encodeEmployee(df)
         else:
