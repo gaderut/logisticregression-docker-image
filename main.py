@@ -50,22 +50,6 @@ def readIPs():
 def modeltrain(x_train, y_train):
     global model
     print("model training started *************************")
-    # test = {}
-    # test["workflow_specification"] = [["1"], ["3"], ["2"]]
-    # ws = test["workflow_specification"]
-    # print("*** workflow specification*** ", ws)
-    # logger.info("*** workflow specification*** ", ws)
-    # for i, lst in enumerate(ws):
-    #     for j, component in enumerate(lst):
-    #         if component == "2":
-    #             indexLR = i
-    # # indexLR = wfspec.index(2)
-    # if indexLR+1 < len(ws):
-    #     nextComponent = ws[indexLR + 1][0]
-    # else:
-    #     nextComponent = 4
-    # print("***** the next component is ****** ", nextComponent)
-    # logger.info("***** the next component is ****** ", nextComponent)
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     print("model training complete*********************")
@@ -77,8 +61,7 @@ def modeltrain(x_train, y_train):
 def trainModel():
     # first read data from manager
     global workflowdata, client, model, lgr_analytics, ipaddressMap, workflowType, workflowspec
-
-    lgr_analytics["start_time"] = time.process_time()
+    lgr_analytics["start_time"] = time.time()
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
@@ -91,7 +74,7 @@ def trainModel():
     # then read training data from database
     logger.info(workflowId, "calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
-    x_train, y_train = readTrainingData(client,workflowType)
+    x_train, y_train, resultt = readTrainingData(client,workflowType)
 
     logger.info("model training started *************************")
     print("model training started *************************")
@@ -100,11 +83,15 @@ def trainModel():
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
-    lgr_analytics["end_time"] = time.process_time()
+    lgr_analytics["end_time"] = time.time()
     logger.info("model training complete*********************")
     print("model training complete*********************")
     # return Response(lgr_analytics, status=200, mimetype='application/json')
-    return jsonify(lgr_analytics), 200
+    if resultt == -1:
+        return jsonify(lgr_analytics), 200
+    else:
+        return jsonify(lgr_analytics), 400
+
 
 def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
@@ -143,7 +130,7 @@ def readTrainingData(tablename, workflow):
             result = row.count
     except:
         result = -1
-        sys.exit(1)
+        # sys.exit(1)
         print("Table does not exists in Cassandra, shutting down Logistic regression component")
 
     rows = session.execute('SELECT * FROM ' + tablename)
@@ -162,7 +149,7 @@ def readTrainingData(tablename, workflow):
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
-    return x_train, y_train
+    return x_train, y_train, result
 
 
 def encodeEmployee(df, onehot=True):
@@ -210,7 +197,7 @@ def predict():
     if request.method == 'POST':
         print("***********prediction started*************")
         global lgr_analytics, workflowdata
-        lgr_analytics["start_time"] = time.process_time()
+        lgr_analytics["start_time"] = time.time()
 
         workflowdata = request.get_json()
         data = workflowdata['data']
@@ -240,7 +227,7 @@ def predict():
                          18: "17:00", 19: "17:30", 20: "18:00",
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
 
-        lgr_analytics["end_time"] = time.process_time()
+        lgr_analytics["end_time"] = time.time()
         lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
         print("********** calling nextFire() in predict **********")
         nextFire()
