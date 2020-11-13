@@ -41,8 +41,8 @@ def readIPs():
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
 
-    newip = workflowdata["ips"]
-    ipaddressMap[workflowType + "#" + client] = newip["4"]
+    ipaddressMap = workflowdata["ips"]
+    ipaddressMap[workflowType + "#" + client] = ipaddressMap["4"]
     log("ip address hashmap updated for ", workflowtype + "#" + client)
     # id = workflowtype + "#" + client
     # for i in range(len(ipaddressMap)):
@@ -74,8 +74,8 @@ def trainModel():
     # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
-    ipaddressMap = workflowdata["ips"]
-    ipaddressMap[workflowType+"#"+client] = ipaddressMap["4"]
+    newipadd = workflowdata["ips"]
+    ipaddressMap[workflowType+"#"+client] = newipadd["4"]
 
     # then read training data from database
     log.info(workflowId, "calling function to read training data from database *************************")
