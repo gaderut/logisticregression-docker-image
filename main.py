@@ -42,11 +42,13 @@ def readIPs():
     print("*** workflow specification*** ", workflowspec)
 
     newip = workflowdata["ips"]
-    id = workflowtype + "#" + client
-    for i in range(len(ipaddressMap)):
-        if id not in ipaddressMap:
-            ipaddressMap[workflowtype + "#" + client] = newip["4"]
-            log("ip address hashmap updated for ", id)
+    ipaddressMap[workflowType + "#" + client] = newip["4"]
+    log("ip address hashmap updated for ", workflowtype + "#" + client)
+    # id = workflowtype + "#" + client
+    # for i in range(len(ipaddressMap)):
+    #     if id not in ipaddressMap:
+    #         ipaddressMap[workflowtype + "#" + client] = newip["4"]
+    #         log("ip address hashmap updated for ", id)
     return str(id), 200
 
 
