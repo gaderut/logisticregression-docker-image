@@ -214,18 +214,13 @@ def predict():
 
         workflowdata = request.get_json()
         data = workflowdata['data']
-        list = ['dept_type', 'gender', 'race','day_of_week', 'checkin_datetime']
-        newdata = {}
-        for i in list:
-                newdata = data[i]
-        logger.info("request ", data)
-        # del data['id']  # prediction data id
-        # del data['time']
 
         if "emp_id" in data:
-            # del data['emp_id']
-            # del data['duration']
             print("**********in employee *************")
+            list = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
+            newdata = {}
+            for i in list:
+                newdata = data[i]
             df = pd.json_normalize(newdata)
             predict_data = encodeEmployee(df)
         else:
