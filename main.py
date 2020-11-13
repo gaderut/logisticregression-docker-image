@@ -220,6 +220,7 @@ def predict():
 
         if "emp_id" in data:
             del data['emp_id']
+            del data['duration']
             print("**********in employee *************")
             df = pd.json_normalize(data)
             predict_data = encodeEmployee(df)
