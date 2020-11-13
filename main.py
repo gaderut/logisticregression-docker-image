@@ -32,12 +32,12 @@ log.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
 @app.route("/lgr/ipwfspec", methods=['POST'])
 def readIPs():
-    global workflowdata, client, ipaddressMap, workflowspec
+    global workflowdata, client, ipaddressMap, workflowspec, workflowType
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
     # workflowId = workflowdata["workflow_id"]
-    workflowtype = workflowdata["workflow"]
+    workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
 
