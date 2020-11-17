@@ -137,8 +137,7 @@ def readTrainingData(tablename, workflow):
             result = row.count
     except:
         result = -1
-        # sys.exit(1)
-        print("Table does not exists in Cassandra, shutting down Logistic regression component")
+        log.info("Table does not exists in Cassandra, shutting down Logistic regression component")
 
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
@@ -151,8 +150,8 @@ def readTrainingData(tablename, workflow):
     else:
         # encoding for hospital
         data = encodeHospital(df)
-        x = data.drop(['uu_id', 'hadm_id', 'duration'], axis=1).to_numpy()
-        y = data['duration'].to_numpy()
+        x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
+        y = data['num_in_icu'].to_numpy()
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
@@ -183,13 +182,20 @@ def encodeEmployee(df, onehot=True):
 
 def encodeHospital(df, onehot=True):
     if onehot:
-        timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
-                          "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
-                          "11:30": 7, "12:00": 8, "12:30": 9, "13:00": 10,
-                          "13:30": 11, "14:00": 12, "14:30": 13, "15:00": 14,
-                          "15:30": 15, "16:00": 16, "16:30": 17,
-                          "17:00": 18, "17:30": 19, "18:00": 20,
-                          "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
+        # timeencodeDict = {"8:00": 0, "8:30": 1, "9:00": 2,
+        #                   "9:30": 3, "10:00": 4, "10:30": 5, "11:00": 6,
+        #                   "11:30": 7, "12:00": 8, "12:30": 9, "13:00": 10,
+        #                   "13:30": 11, "14:00": 12, "14:30": 13, "15:00": 14,
+        #                   "15:30": 15, "16:00": 16, "16:30": 17,
+        #                   "17:00": 18, "17:30": 19, "18:00": 20,
+        #                   "18:30": 21, "19:00": 22, "19:30": 23, '20:00': 24}
+        timeencodeDict = {"00:00" : 0, "00:30" : 1, "01:00" : 2, "01:30" : 3,
+                         "02:00" : 4, "02:30" : 5, "03:00" : 6, "03:30" : 7,
+                         "04:00" : 8, "04:30"  : 9, "05:00" : 10, "05:30" : 11,
+                         "06:00" : 12, "06:30" : 13, "07:00" : 13, "07:30" : 14,
+                         "08:00" : 15, "08:30" : 16, "09:00" : 17, "09:30" : 18,
+                         "10:00": 19, "10:30" : 20, "11:00": 21,
+                         "11:30" : 21, "12:00": 22, "12:30" : 23}
         dayencodeDict = {
             'MON': 0, "TUE": 1, 'WED': 2, 'THU': 3, "FRI": 4, "SAT": 5, "SUN": 6
         }
@@ -210,16 +216,19 @@ def predict():
         data = workflowdata['data']
 
         if "emp_id" in data:
-            print("**********in employee *************")
-            featureList = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
+            featureListEmployee = ['dept_type', 'gender', 'race', 'day_of_week', 'checkin_datetime']
             newdata = {}
-            for i in featureList:
+            for i in featureListEmployee:
                 newdata[i] = data[i]
             df = pd.json_normalize(newdata)
             predict_data = encodeEmployee(df)
         else:
-            del data['hadm_id']
-            df = pd.json_normalize(data)
+            featureListHospital = ['hospital_expire_flag', 'insurance', 'duration', 'amount', 'rate', 'total_items',
+                                   'value', 'dilution_value', 'abnormal_count', 'item_distinct_abnormal', 'checkin_datetime', 'day_of_week']
+            newdata = {}
+            for i in featureListHospital:
+                newdata[i] = data[i]
+            df = pd.json_normalize(newdata)
             predict_data = encodeHospital(df)
 
         log.info("start prediction*******************************************")
@@ -235,7 +244,10 @@ def predict():
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
 
         lgr_analytics["end_time"] = time.time()
-        lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
+        if "emp_id" in data:
+            lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
+        else:
+            lgr_analytics["prediction_LR"] = int(y_pred[0])
         print("********** calling nextFire() in predict **********")
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
@@ -247,7 +259,6 @@ def nextFire():
     global client, workflowType
     print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
-    print("*** workflow specification*** ", workflowspec)
     log.info("*** workflow specification*** ", workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
@@ -262,9 +273,9 @@ def nextFire():
         nextComponent = workflowspec[indexLR + 1][0]
     else:
         nextComponent = 4
-    print("***** the next component is ****** ", nextComponent)
     log.info("***** the next component is ****** ", nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
+    log.info(workflowdata)
 
     if nextComponent == "3":  # svm
         nextIPport = ipaddressMap[nextComponent]
