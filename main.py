@@ -261,7 +261,7 @@ def nextFire():
     global client, workflowType
     print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
-    log.info("*** workflow specification*** "+ workflowspec)
+    # log.info("*** workflow specification*** "+ workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
 
@@ -327,4 +327,3 @@ if __name__ == '__main__':
     log.info("**** start listening ****")
     app.run(debug=True, host="0.0.0.0", port=50)
 
-    # return error and message flask
