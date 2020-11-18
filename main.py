@@ -273,7 +273,7 @@ def nextFire():
         nextComponent = workflowspec[indexLR + 1][0]
     else:
         nextComponent = 4
-    log.info("***** the next component is ****** ", nextComponent)
+    log.info("***** the next component is ****** "+nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
     log.info(workflowdata)
 
