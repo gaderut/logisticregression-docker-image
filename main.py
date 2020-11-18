@@ -250,7 +250,7 @@ def predict():
             lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
         else:
             lgr_analytics["prediction_LR"] = int(y_pred[0])
-        print("********** calling nextFire() in predict **********")
+        log.info("********** calling nextFire() in predict **********")
         nextFire()
         # return timedcodeDict[int(y_pred[0])]
         # return Response(lgr_analytics, status=200, mimetype='application/json')
@@ -274,9 +274,10 @@ def nextFire():
     if indexLR+1 < len(workflowspec):
         nextComponent = workflowspec[indexLR + 1][0]
     else:
-        nextComponent = 4
+        nextComponent = "4"
     # log.info("***** the next component is ****** "+nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
+
     log.info(workflowdata)
 
     if nextComponent == "3":  # svm
@@ -289,12 +290,14 @@ def nextFire():
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     elif nextComponent == "4":
+        log.info(nextComponent)
         nextIPport = ipaddressMap[workflowType+"#"+client]
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
-        print("next component ip ", ipaddress)
-        print("next component port ", port)
+        log.info("making request to Analytics")
+        log.info(ipaddress)
+        log.info(port)
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     else:
