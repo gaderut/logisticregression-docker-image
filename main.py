@@ -49,15 +49,16 @@ def readIPs():
     #     if id not in ipaddressMap:
     #         ipaddressMap[workflowtype + "#" + client] = newip["4"]
     #         log("ip address hashmap updated for ", id)
-    return id, 200
+    return jsonify(lgr_analytics), 200
 
 
 # Model Training at Launch
 def modeltrain(x_train, y_train):
-    global model
+    global model, lgr_analytics
     print("model training started *************************")
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
+    lgr_analytics["end_time"] = time.time()
     print("model training complete*********************")
     # record time
 
@@ -120,7 +121,8 @@ def pandas_factory(colnames, rows):
 
 
 def readTrainingData(tablename, workflow):
-    global client, workflowtype
+    global client, workflowtype, lgr_analytics
+    lgr_analytics["start_time"] = time.time()
     client  = tablename
     workflowtype = workflow
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
