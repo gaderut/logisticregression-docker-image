@@ -259,7 +259,7 @@ def nextFire():
     global client, workflowType
     print("*******in nextFire ***********")
     # workflowspec = workflowdata["workflow_specification"]
-    log.info("*** workflow specification*** ", workflowspec)
+    log.info("*** workflow specification*** "+ workflowspec)
     client = workflowdata["client_name"]
     workflowType = workflowdata["workflow"]
 
