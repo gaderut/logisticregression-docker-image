@@ -79,7 +79,7 @@ def trainModel():
     ipaddressMap[workflowType+"#"+client] = newipadd["4"]
 
     # then read training data from database
-    log.info(workflowId, "calling function to read training data from database *************************")
+    log.info("calling function to read training data from database *************************")
     print("calling function to read training data from database *************************")
 
     x_train, y_train, resultt = readTrainingData(client,workflowType)
@@ -285,8 +285,8 @@ def nextFire():
         ipp = nextIPport.split(":")
         ipaddress = ipp[0]
         port = ipp[1]
-        print("next component ip ",ipaddress)
-        print("next component port ", port)
+        log.info("making request to SVM Component")
+        log.info(ipp)
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/svm/predict",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     elif nextComponent == "4":
@@ -296,8 +296,7 @@ def nextFire():
         ipaddress = ipp[0]
         port = ipp[1]
         log.info("making request to Analytics")
-        log.info(ipaddress)
-        log.info(port)
+        log.info(ipp)
         r1 = requests.post(url="http://" + ipaddress + ":" + port + "/put_result",
                            headers={'content-type': 'application/json'}, json=workflowdata, timeout = 60)
     else:
