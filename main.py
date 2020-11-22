@@ -123,17 +123,17 @@ def pandas_factory(colnames, rows):
 def readTrainingData(tablename, workflow):
     global client, workflowType, lgr_analytics
     lgr_analytics["start_time"] = time.time()
-    client  = tablename
+    client = tablename
     workflowType = workflow
-    table = workflowType+"_"+client
+    clientTable = workflowType+"_"+client
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
     log.info("setting DB keyspace . . .")
     session = cluster.connect('ccproj_db', wait_for_all_pools=True)
     session.row_factory = pandas_factory
     session.execute('USE ccproj_db')
     result = 0
-    # qry = "SELECT COUNT(*) FROM " + table + ";"
-    qry = "SELECT COUNT(*) FROM " + tablename + ";"
+    qry = "SELECT COUNT(*) FROM " + clientTable + ";"
+    # qry = "SELECT COUNT(*) FROM " + tablename + ";"
     try:
         stat = session.prepare(qry)
         x = session.execute(stat)
@@ -143,7 +143,7 @@ def readTrainingData(tablename, workflow):
         result = -1
         log.info("Table does not exists in Cassandra, shutting down Logistic regression component")
 
-    rows = session.execute('SELECT * FROM ' + tablename)
+    rows = session.execute('SELECT * FROM ' + clientTable)
     df = rows._current_rows
     print
     row = rows[0]
