@@ -105,21 +105,6 @@ def pandas_factory(colnames, rows):
     return pd.DataFrame(rows, columns=colnames)
 
 
-# def validation(usr_name):
-#     result = 0
-#     qry = "SELECT COUNT(*) FROM " + usr_name + ";"
-#     try:
-#         stat = session.prepare(qry)
-#         x = session.execute(stat)
-#         for row in x:
-#              result = row.count
-#     except:
-#         result = -1
-#         log.info("DataLoader validation: No Table found in Cassandra database.")
-#         print("DataLoader validation: No Table found in Cassandra database.")
-#     return result
-
-
 def readTrainingData(tablename, workflow):
     global client, workflowType, lgr_analytics
     lgr_analytics["start_time"] = time.time()
@@ -157,11 +142,11 @@ def readTrainingData(tablename, workflow):
         y = data['duration'].to_numpy()
     else:
         # encoding for hospital
-        log.info("hospital data")
+        print("hospital data")
         data = encodeHospital(df)
         print(df)
         print(df.dtypes)
-        print("checkin_datetime column ", df['checkin_datetime'])
+        print("checkin_datetime column hospital ", df['checkin_datetime'])
         x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
         y = data['num_in_icu'].to_numpy()
 
@@ -321,13 +306,6 @@ if __name__ == '__main__':
     else:
         log.error("Include variable client_name in docker swarm command")
         sys.exit(1)
-    # filename = "logistic_regression"
-    # fh = TimedRotatingFileHandler(filename, when='midnight')
-    # fh.suffix = '%Y_%m_%d.log'
-    # formatter = logging.Formatter('%(asctime)s | %(levelname)-8s | %(lineno)04d | %(message)s')
-    # fh.setFormatter(formatter)
-    # logger.addHandler(fh)
-    # logger.setLevel(logging.WARNING)
 
     log.info("data read from Database ***********")
     rs = 0
