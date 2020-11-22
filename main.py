@@ -145,10 +145,12 @@ def readTrainingData(tablename, workflow):
 
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
-    print(df)
-    print(df.dtypes)
+    print
+    row = rows[0]
 
     if 'emp_id' in df.columns:
+        print(df)
+        print(df.dtypes)
         print("columns ", df['checkin_datetime'])
         data = encodeEmployee(df)
         x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
@@ -157,7 +159,9 @@ def readTrainingData(tablename, workflow):
         # encoding for hospital
         log.info("hospital data")
         data = encodeHospital(df)
-        print(data[1])
+        print(df)
+        print(df.dtypes)
+        print("checkin_datetime column ", df['checkin_datetime'])
         x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
         y = data['num_in_icu'].to_numpy()
 
