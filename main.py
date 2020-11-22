@@ -121,16 +121,18 @@ def pandas_factory(colnames, rows):
 
 
 def readTrainingData(tablename, workflow):
-    global client, workflowtype, lgr_analytics
+    global client, workflowType, lgr_analytics
     lgr_analytics["start_time"] = time.time()
     client  = tablename
-    workflowtype = workflow
+    workflowType = workflow
+    table = workflowType+"_"+client
     cluster = Cluster(['10.176.67.91'])  # Cluster(['0.0.0.0'], port=9042) #Cluster(['10.176.67.91'])
     log.info("setting DB keyspace . . .")
     session = cluster.connect('ccproj_db', wait_for_all_pools=True)
     session.row_factory = pandas_factory
     session.execute('USE ccproj_db')
     result = 0
+    # qry = "SELECT COUNT(*) FROM " + table + ";"
     qry = "SELECT COUNT(*) FROM " + tablename + ";"
     try:
         stat = session.prepare(qry)
@@ -143,6 +145,8 @@ def readTrainingData(tablename, workflow):
 
     rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
+    print(df)
+    print(df.dtypes)
 
     if 'emp_id' in df.columns:
         print("columns ", df['checkin_datetime'])
@@ -151,7 +155,9 @@ def readTrainingData(tablename, workflow):
         y = data['duration'].to_numpy()
     else:
         # encoding for hospital
+        log.info("hospital data")
         data = encodeHospital(df)
+        print(data[1])
         x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
         y = data['num_in_icu'].to_numpy()
 
@@ -238,11 +244,11 @@ def predict():
         y_pred = list(y_pred)
 
         timedcodeDict = {0: "8:00", 1: "8:30", 2: "9:00",
-                         3: "9:30", 4: "10:00", 5: "10:30", 6: "11:00",
+                         3: "9:30", 18: "10:00", 19: "10:30", 20: "11:00",
                          7: "11:30", 8: "12:00", 9: "12:30", 10: "13:00",
                          11: "13:30", 12: "14:00", 13: "14:30", 14: "15:00",
                          15: "15:30", 16: "16:00", 17: "16:30",
-                         18: "17:00", 19: "17:30", 20: "18:00",
+                         4: "17:00", 5: "17:30", 6: "18:00",
                          21: "18:30", 22: "19:00", 23: "19:30", 24: "20:00"}
 
         lgr_analytics["end_time"] = time.time()
