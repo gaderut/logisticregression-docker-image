@@ -9,7 +9,6 @@ from flask_cors import CORS
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 import pandas as pd
-from logging.handlers import TimedRotatingFileHandler
 import time
 import requests
 import sys
@@ -25,7 +24,6 @@ workflowType = None
 workflowId = None
 ipaddressMap = None
 workflowspec = None
-# logger = logging.getLogger('logistic_regression')
 lgr_analytics = {}
 log.basicConfig(level=os.environ.get("LOGLEVEL", "INFO"))
 
@@ -36,7 +34,6 @@ def readIPs():
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
-    # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
     print("*** workflow specification*** ", workflowspec)
@@ -44,11 +41,6 @@ def readIPs():
     ipaddressMap = workflowdata["ips"]
     ipaddressMap[workflowType + "#" + client] = ipaddressMap["4"]
     id = workflowType + "#" + client
-    # log("ip address hashmap updated for ", id)
-    # for i in range(len(ipaddressMap)):
-    #     if id not in ipaddressMap:
-    #         ipaddressMap[workflowtype + "#" + client] = newip["4"]
-    #         log("ip address hashmap updated for ", id)
     return jsonify(lgr_analytics), 200
 
 
@@ -60,7 +52,6 @@ def modeltrain(x_train, y_train):
     model = lg_clf.fit(x_train, y_train)
     lgr_analytics["end_time"] = time.time()
     print("model training complete*********************")
-    # record time
 
 
 # Model Training
@@ -72,7 +63,6 @@ def trainModel():
 
     workflowdata = request.get_json()
     client = workflowdata["client_name"]
-    # workflowId = workflowdata["workflow_id"]
     workflowType = workflowdata["workflow"]
     workflowspec = workflowdata["workflow_specification"]
     newipadd = workflowdata["ips"]
@@ -131,8 +121,7 @@ def readTrainingData(tablename, workflow):
     rows = session.execute('SELECT * FROM ' + clientTable)
     # rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
-    print
-    row = rows[0]
+    print(rows[0])
 
     if 'emp_id' in df.columns:
         print(df)
@@ -146,10 +135,11 @@ def readTrainingData(tablename, workflow):
         data = encodeHospital(df)
         print(df)
         print(df.dtypes)
-        print(row.num_in_icu)
         print("checkin_datetime column hospital ", df['checkin_datetime'])
+        print("num_in_icu column hospital ", df['num_in_icu'])
         x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
         y = data['num_in_icu'].to_numpy()
+        y = y.astype('int')
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.50, random_state=42)
     session.shutdown()
