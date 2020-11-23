@@ -121,7 +121,6 @@ def readTrainingData(tablename, workflow):
     rows = session.execute('SELECT * FROM ' + clientTable)
     # rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
-    print(rows[0])
 
     if 'emp_id' in df.columns:
         print(df)
@@ -135,6 +134,7 @@ def readTrainingData(tablename, workflow):
         data = encodeHospital(df)
         print(df)
         print(df.dtypes)
+        print(df.iloc[0].head(1))
         print("checkin_datetime column hospital ", df['checkin_datetime'])
         print("num_in_icu column hospital ", df['num_in_icu'])
         x = data.drop(['uu_id', 'hadm_id', 'num_in_icu'], axis=1).to_numpy()
