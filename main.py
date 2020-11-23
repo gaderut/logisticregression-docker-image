@@ -196,7 +196,7 @@ def encodeHospital(df, onehot=True):
 @app.route("/lgr/predict", methods=['POST'])
 def predict():
     if request.method == 'POST':
-        print("***********prediction started*************")
+        log.info("***********prediction started*************")
         global lgr_analytics, workflowdata
         lgr_analytics["start_time"] = time.time()
 
@@ -235,10 +235,11 @@ def predict():
         if "emp_id" in data:
             lgr_analytics["prediction_LR"] = timedcodeDict[int(y_pred[0])]
         else:
+            log.info("The hospital prediction is")
+            log.info(int(y_pred[0]))
             lgr_analytics["prediction_LR"] = int(y_pred[0])
         log.info("********** calling nextFire() in predict **********")
         nextFire()
-        # return timedcodeDict[int(y_pred[0])]
         # return Response(lgr_analytics, status=200, mimetype='application/json')
         return jsonify(lgr_analytics), 200
 
@@ -261,7 +262,6 @@ def nextFire():
         nextComponent = workflowspec[indexLR + 1][0]
     else:
         nextComponent = "4"
-    # log.info("***** the next component is ****** "+nextComponent)
     workflowdata["analytics"].append(lgr_analytics)
 
     log.info(workflowdata)
