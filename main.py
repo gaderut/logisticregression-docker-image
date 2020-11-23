@@ -117,8 +117,8 @@ def readTrainingData(tablename, workflow):
     session.row_factory = pandas_factory
     session.execute('USE ccproj_db')
     result = 0
-    qry = "SELECT COUNT(*) FROM " + clientTable + ";"
-    # qry = "SELECT COUNT(*) FROM " + tablename + ";"
+    # qry = "SELECT COUNT(*) FROM " + clientTable + ";"
+    qry = "SELECT COUNT(*) FROM " + tablename + ";"
     try:
         stat = session.prepare(qry)
         x = session.execute(stat)
@@ -128,10 +128,12 @@ def readTrainingData(tablename, workflow):
         result = -1
         log.info("Table does not exists in Cassandra, shutting down Logistic regression component")
 
-    rows = session.execute('SELECT * FROM ' + clientTable)
+    # rows = session.execute('SELECT * FROM ' + clientTable)
+    rows = session.execute('SELECT * FROM ' + tablename)
     df = rows._current_rows
     print
     row = rows[0]
+    print(row.num_in_icu)
 
     if 'emp_id' in df.columns:
         print(df)
@@ -141,7 +143,6 @@ def readTrainingData(tablename, workflow):
         x = data.drop(['uu_id', 'emp_id', 'duration'], axis=1).to_numpy()
         y = data['duration'].to_numpy()
     else:
-        # encoding for hospital
         print("hospital data")
         data = encodeHospital(df)
         print(df)
