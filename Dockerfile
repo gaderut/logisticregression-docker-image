@@ -1,17 +1,26 @@
 # set base image (host OS)
-FROM python:3.7
-
-# set the working directory in the container
-RUN mkdir /lgr
-WORKDIR /lgr
+FROM python:3.7-slim as base
+                                       
+# Pull small size base image
+FROM base as builder
+                                                     
+# Create libraries install layer
+RUN mkdir /install
+WORKDIR /install
 
 # install dependencies
-COPY requirements.txt /lgr
-RUN pip install -r requirements.txt
+COPY requirements.txt /requirements.txt                 
+RUN pip install --prefix=/install -r /requirements.txt
 
-# copy the content of the local src directory to the working directory
-COPY . /lgr
+# start from base layer
+FROM base
+
+# Copy installed libraries                                                                   
+COPY --from=builder /install /usr/local
+
+# Copy actual application
+COPY . /app                                                                     
+WORKDIR /app
 
 # command to run on container start
-CMD [ "python", "main.py" ]
-
+CMD [ "python3", "main.py" ]                                      
