@@ -34,7 +34,7 @@ def readIPs():
 
     ipaddressMap = workflowdata["ips"]
     ipaddressMap[workflowType + "#" + client] = ipaddressMap["4"]
-    lgr_analytics["prediction_LR"] = 0
+    lgr_analytics["prediction_LR"] = "lgr"
     return jsonify(lgr_analytics), 200
 
 
@@ -45,7 +45,7 @@ def modeltrain(x_train, y_train):
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     lgr_analytics["end_time"] = time.time()
-    lgr_analytics["prediction_LR"] = 0
+    lgr_analytics["prediction_LR"] = "lgr"
     print("model training complete*********************")
 
 
@@ -77,7 +77,7 @@ def trainModel():
     lg_clf = LogisticRegression(class_weight='balanced', solver='liblinear', C=0.1, max_iter=10000)
     model = lg_clf.fit(x_train, y_train)
     lgr_analytics["end_time"] = time.time()
-    lgr_analytics["prediction_LR"] = 0
+    lgr_analytics["prediction_LR"] = "lgr"
     log.info("model training complete*********************")
     print("model training complete*********************")
 
